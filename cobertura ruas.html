@@ -2,227 +2,223 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>RUTACOB</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root {
-  --bg: #080C0A;
-  --panel: #0E1410;
-  --border: #1A2420;
-  --green: #00FF88;
-  --gdim: #00FF8818;
-  --yellow: #FFD600;
-  --red: #FF4444;
-  --text: #C8D8D0;
-  --dim: #4A6058;
-  --mono: 'Space Mono', monospace;
-  --dis: 'Syne', sans-serif;
+  --bg: #080C0A; --panel: #0E1410; --border: #1A2420;
+  --green: #00FF88; --gdim: #00FF8818; --yellow: #FFD600;
+  --red: #FF4444; --text: #C8D8D0; --dim: #4A6058;
+  --mono: 'Space Mono', monospace; --dis: 'Syne', sans-serif;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); overflow: hidden; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--mono); }
 
-/* ── LAYOUT PRINCIPAL ── */
-#app { display: flex; flex-direction: column; height: 100vh; }
+/* MAPA ocupa tudo */
+#map { position: fixed; inset: 0; z-index: 1; }
+.leaflet-container { background: #060A08 !important; }
+.leaflet-control-zoom a { background: var(--panel) !important; color: var(--text) !important; border-color: var(--border) !important; }
 
-/* ── HEADER ── */
+/* HEADER flutuante */
 #hdr {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; background: var(--panel);
-  border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 1000;
+  padding: 10px 14px;
+  background: rgba(14,20,16,0.95); border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
 }
 .logo { font-family: var(--dis); font-size: 16px; color: var(--green); font-weight: 800; }
-.logo small { color: var(--dim); font-family: var(--mono); font-size: 10px; margin-left: 6px; }
-.tabs { display: flex; gap: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px; }
-.tab { padding: 5px 10px; border-radius: 3px; border: none; background: transparent; color: var(--dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
-.tab.on { background: var(--gdim); color: var(--green); border: 1px solid #00FF8833; }
+.logo small { color: var(--dim); font-family: var(--mono); font-size: 9px; margin-left: 6px; }
 
-/* ── MAPA ── */
-#map { flex: 1; background: #060A08; z-index: 1; }
-
-/* ── PAINEL INFERIOR (mobile-first) ── */
-#panel {
+/* GAVETA inferior */
+#drawer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
   background: var(--panel);
   border-top: 1px solid var(--border);
-  flex-shrink: 0;
-  max-height: 45vh;
-  overflow-y: auto;
-  z-index: 500;
+  border-radius: 16px 16px 0 0;
+  max-height: 75vh;
+  display: flex; flex-direction: column;
+  transition: transform 0.3s ease;
 }
-.prow { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); align-items: flex-start; flex-wrap: wrap; }
-.plabel { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
-.psec { padding: 10px 14px; border-bottom: 1px solid var(--border); }
 
-/* ── BOTÕES ── */
+/* Alça da gaveta */
+#handle {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px; cursor: pointer; flex-shrink: 0;
+}
+#handle-bar {
+  width: 36px; height: 4px; background: var(--border); border-radius: 2px;
+}
+
+/* Conteúdo scrollável */
+#drawer-content {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  flex: 1; padding: 0 14px 32px;
+}
+
+/* Seções */
+.sec { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.sec:last-child { border-bottom: none; }
+.sec-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+
+/* Botões */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 9px 14px; border-radius: 5px; border: 1px solid var(--border);
+  padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);
   background: var(--bg); color: var(--dim); font-family: var(--mono);
-  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
-.btn:hover { border-color: #00FF8844; color: var(--text); }
+.btn:active { opacity: 0.7; }
 .btn.pri { background: var(--gdim); border-color: #00FF8855; color: var(--green); }
-.btn.pri:hover { border-color: var(--green); }
 .btn.danger { border-color: #FF444433; color: #FF444488; }
-.btn.danger:hover { border-color: var(--red); color: var(--red); }
-.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn:disabled { opacity: 0.3; pointer-events: none; }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .btn-full { width: 100%; }
 
-/* ── STEPS ── */
-.steps { display: flex; gap: 6px; }
-.step { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); text-align: center; }
-.step.on { border-color: #00FF8844; background: var(--gdim); }
-.step.done { opacity: 0.5; }
-.step-n { font-size: 10px; color: var(--dim); }
-.step.on .step-n { color: var(--green); }
-.step-t { font-size: 9px; color: var(--dim); margin-top: 3px; line-height: 1.3; }
-.step.on .step-t { color: var(--text); }
-
-/* ── UPLOAD ── */
+/* Upload */
 .upload {
-  border: 1px dashed var(--border); border-radius: 5px; padding: 12px;
+  border: 1px dashed var(--border); border-radius: 6px; padding: 14px;
   text-align: center; cursor: pointer; background: var(--bg); transition: all 0.2s;
 }
-.upload:hover { border-color: #00FF8855; background: var(--gdim); }
-.upload p { font-size: 10px; color: var(--dim); line-height: 1.6; }
+.upload:active { background: var(--gdim); border-color: #00FF8855; }
+.upload p { font-size: 11px; color: var(--dim); line-height: 1.7; }
 .upload strong { color: var(--green); }
 
-/* ── GPX LIST ── */
+/* GPX list */
 .gpx-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 10px; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 4px; margin-bottom: 4px; font-size: 10px;
+  padding: 7px 10px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; margin-top: 6px; font-size: 10px;
 }
-.gpx-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
-.gpx-rm { background: none; border: none; color: var(--dim); cursor: pointer; padding: 0 4px; font-size: 12px; }
-.gpx-rm:hover { color: var(--red); }
+.gpx-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.gpx-rm { background: none; border: none; color: var(--dim); cursor: pointer; padding: 0 4px; font-size: 14px; flex-shrink: 0; }
 
-/* ── STATS ── */
-.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+/* Steps */
+.steps { display: flex; gap: 6px; margin-bottom: 12px; }
+.step { flex: 1; padding: 8px 6px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); text-align: center; }
+.step.on { border-color: #00FF8844; background: var(--gdim); }
+.step.done { border-color: #00FF8822; opacity: 0.55; }
+.step-n { font-size: 11px; color: var(--dim); font-weight: 700; }
+.step.on .step-n { color: var(--green); }
+.step-t { font-size: 9px; color: var(--dim); margin-top: 2px; }
+.step.on .step-t { color: var(--text); }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
 .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; }
 .stat-l { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
-.stat-v { font-family: var(--dis); font-size: 18px; font-weight: 700; color: var(--green); }
+.stat-v { font-family: var(--dis); font-size: 17px; font-weight: 700; color: var(--green); }
 .stat-u { font-size: 8px; color: var(--dim); }
 .stat.miss .stat-v { color: var(--yellow); }
-.stat.tot .stat-v { color: var(--text); font-size: 15px; }
+.stat.tot .stat-v { color: var(--text); font-size: 14px; }
 
-/* ── PROGRESS ── */
-.prog-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; height: 5px; overflow: hidden; margin: 8px 0 4px; }
+/* Progress */
+.prog-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; height: 5px; overflow: hidden; margin: 0 0 4px; }
 .prog-bar { height: 100%; background: linear-gradient(90deg, var(--green), #00DDAA); width: 0%; transition: width 0.6s; }
 .prog-lbl { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); }
 
-/* ── OVERLAY ── */
+/* Info area */
+.area-info { font-size: 11px; color: var(--green); margin-top: 8px; }
+
+/* Overlay no mapa */
 #overlay {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-60%);
   background: rgba(8,12,10,0.92); border: 1px solid var(--border);
-  border-radius: 8px; padding: 20px 24px; text-align: center; z-index: 200;
-  pointer-events: none; max-width: 260px;
+  border-radius: 8px; padding: 20px 22px; text-align: center; z-index: 50;
+  pointer-events: none; max-width: 240px;
 }
-#overlay h3 { font-family: var(--dis); font-size: 15px; color: var(--green); margin-bottom: 6px; }
+#overlay h3 { font-family: var(--dis); font-size: 14px; color: var(--green); margin-bottom: 6px; }
 #overlay p { font-size: 10px; color: var(--dim); line-height: 1.7; }
 
-/* ── LOADING ── */
+/* Loading */
 #loading {
   position: fixed; inset: 0; background: rgba(8,12,10,0.88);
   display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9000;
 }
 .spin { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: sp 0.8s linear infinite; margin-bottom: 12px; }
 @keyframes sp { to { transform: rotate(360deg); } }
-#loading p { font-size: 10px; color: var(--dim); letter-spacing: 2px; }
+#lmsg { font-size: 10px; color: var(--dim); letter-spacing: 2px; }
 
-/* ── TOAST ── */
+/* Toast */
 #toast {
-  position: fixed; bottom: 20px; right: 16px; left: 16px;
+  position: fixed; bottom: 20px; left: 16px; right: 16px;
   background: var(--panel); border: 1px solid #00FF8844; border-radius: 6px;
-  padding: 10px 14px; font-size: 11px; color: var(--green);
-  z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; text-align: center;
+  padding: 10px 14px; font-size: 11px; color: var(--green); z-index: 9999;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s; text-align: center;
 }
 #toast.show { transform: translateY(0); opacity: 1; }
-
-.leaflet-container { background: #060A08 !important; }
-.leaflet-control-zoom a { background: var(--panel) !important; color: var(--text) !important; border-color: var(--border) !important; }
 </style>
 </head>
 <body>
-<div id="app">
 
-  <!-- HEADER -->
-  <div id="hdr">
-    <div class="logo">RUTACOB <small>v3.2</small></div>
-    <div class="tabs">
-      <button class="tab on" id="td" onclick="setMode('draw')">✏ Desenhar</button>
-      <button class="tab" id="tg" onclick="setMode('gpx')">📁 GPX</button>
-    </div>
+<div id="map"></div>
+
+<div id="overlay">
+  <h3>Como usar</h3>
+  <p>1. Toque <strong style="color:var(--green)">Começar</strong> e trace o perímetro no mapa<br>2. Suba as pedaladas GPX<br>3. Calcule</p>
+</div>
+
+<div id="hdr">
+  <div class="logo">RUTACOB <small>v3.2</small></div>
+  <div style="font-size:9px;color:var(--dim);letter-spacing:1px;">Porto Alegre · RS</div>
+</div>
+
+<!-- GAVETA -->
+<div id="drawer">
+  <div id="handle" onclick="toggleDrawer()">
+    <div id="handle-bar"></div>
   </div>
 
-  <!-- MAPA -->
-  <div style="position:relative; flex:1; min-height:0;">
-    <div id="map" style="width:100%;height:100%;"></div>
-    <div id="overlay">
-      <h3>Defina a área</h3>
-      <p>Toque em <strong style="color:var(--green)">Começar</strong> abaixo e clique no mapa para traçar o perímetro do bairro.</p>
-    </div>
-  </div>
-
-  <!-- PAINEL INFERIOR -->
-  <div id="panel">
+  <div id="drawer-content">
 
     <!-- STEPS -->
-    <div class="psec">
-      <div class="steps">
-        <div class="step on" id="s1"><div class="step-n">1</div><div class="step-t">Área</div></div>
-        <div class="step" id="s2"><div class="step-n">2</div><div class="step-t">Pedaladas</div></div>
-        <div class="step" id="s3"><div class="step-n">3</div><div class="step-t">Calcular</div></div>
-      </div>
+    <div class="steps">
+      <div class="step on" id="s1"><div class="step-n">1</div><div class="step-t">Área</div></div>
+      <div class="step" id="s2"><div class="step-n">2</div><div class="step-t">GPX</div></div>
+      <div class="step" id="s3"><div class="step-n">3</div><div class="step-t">Calcular</div></div>
     </div>
 
-    <!-- ÁREA -->
-    <div class="psec" id="sec-area">
-      <div class="plabel">Área do bairro</div>
-
-      <!-- Modo desenho -->
-      <div id="ctrl-draw">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn pri" id="btn-start" onclick="startDraw()">✏ Começar</button>
-          <button class="btn" id="btn-finish" onclick="finishDraw()" disabled>✓ Fechar</button>
-          <button class="btn danger" id="btn-clear" onclick="clearArea()" style="display:none">✕ Limpar</button>
-        </div>
-        <div id="area-info" style="display:none;margin-top:8px;font-size:11px;color:var(--green)"></div>
+    <!-- PASSO 1: ÁREA -->
+    <div class="sec">
+      <div class="sec-label">1 — Área do bairro</div>
+      <div class="btn-row">
+        <button class="btn pri" id="btn-start" onclick="startDraw()">✏ Começar a desenhar</button>
+        <button class="btn" id="btn-finish" onclick="finishDraw()" disabled>✓ Fechar</button>
+        <button class="btn danger" id="btn-clear" onclick="clearArea()" style="display:none">✕ Limpar</button>
       </div>
-
-      <!-- Modo GPX perímetro -->
-      <div id="ctrl-gpx" style="display:none">
-        <div class="upload" onclick="document.getElementById('inp-per').click()">
-          <p><strong>Toque para subir</strong><br>GPX do perímetro</p>
-        </div>
-        <input type="file" id="inp-per" accept=".gpx" style="display:none" onchange="loadPerim(this)">
-        <button class="btn danger" id="btn-clr-per" onclick="clearArea()" style="display:none;margin-top:6px;">✕ Limpar</button>
-        <div id="area-info-gpx" style="display:none;margin-top:8px;font-size:11px;color:var(--green)"></div>
+      <div id="area-info" class="area-info" style="display:none"></div>
+      <div style="margin-top:10px;font-size:9px;color:var(--dim);line-height:1.6;">
+        Ou suba um GPX de perímetro:
       </div>
+      <div class="upload" style="margin-top:6px;" onclick="document.getElementById('inp-per').click()">
+        <p><strong>GPX de perímetro</strong><br>volta ao redor do bairro</p>
+      </div>
+      <input type="file" id="inp-per" accept=".gpx" style="display:none" onchange="loadPerim(this)">
     </div>
 
-    <!-- PEDALADAS -->
-    <div class="psec">
-      <div class="plabel">Pedaladas GPX</div>
+    <!-- PASSO 2: PEDALADAS -->
+    <div class="sec">
+      <div class="sec-label">2 — Pedaladas dentro da área</div>
       <div class="upload" onclick="document.getElementById('inp-rides').click()">
-        <p><strong>Toque para subir</strong><br>Pode selecionar vários GPX</p>
+        <p><strong>Subir GPX das pedaladas</strong><br>pode selecionar vários de uma vez</p>
       </div>
       <input type="file" id="inp-rides" accept=".gpx" multiple style="display:none" onchange="loadRides(this)">
-      <div id="ride-list" style="margin-top:8px;"></div>
+      <div id="ride-list"></div>
     </div>
 
-    <!-- CALCULAR -->
-    <div class="psec">
+    <!-- PASSO 3: CALCULAR -->
+    <div class="sec">
+      <div class="sec-label">3 — Calcular</div>
       <button class="btn pri btn-full" id="btn-calc" onclick="calculate()" disabled>⚡ Calcular cobertura</button>
     </div>
 
     <!-- RESULTADO -->
-    <div class="psec" id="sec-result" style="display:none">
-      <div class="plabel">Resultado</div>
+    <div class="sec" id="sec-result" style="display:none">
+      <div class="sec-label">Resultado</div>
       <div class="stats">
         <div class="stat"><div class="stat-l">Coberto</div><div class="stat-v" id="sv-cov">—</div><div class="stat-u">km</div></div>
         <div class="stat miss"><div class="stat-l">Faltando</div><div class="stat-v" id="sv-mis">—</div><div class="stat-u">km</div></div>
@@ -235,69 +231,70 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   </div>
 </div>
 
-<!-- LOADING -->
 <div id="loading"><div class="spin"></div><p id="lmsg">CARREGANDO...</p></div>
-<!-- TOAST -->
 <div id="toast"></div>
 
 <script>
-// ── ESTADO ──────────────────────────────────────────────────────────────────
 const S = {
-  mode: 'draw', drawing: false,
-  perimPts: [], perimLayer: null,
+  drawing: false, perimPts: [], perimLayer: null,
   drawMarkers: [], drawLine: null,
   rides: [], rideLayer: null,
-  streetL: { cov: null, miss: null },
-  areaOk: false,
+  streetL: { cov: null, miss: null }, areaOk: false,
+  drawerOpen: true,
 };
 
-// ── MAPA ─────────────────────────────────────────────────────────────────────
-const map = L.map('map', { center: [-30.03, -51.20], zoom: 13, zoomControl: true });
+// MAPA
+const map = L.map('map', { center:[-30.03,-51.20], zoom:13, zoomControl:true });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OSM © Carto', maxZoom: 19
+  attribution:'© OSM © Carto', maxZoom:19
 }).addTo(map);
 
-// ── MODO ─────────────────────────────────────────────────────────────────────
-function setMode(m) {
-  S.mode = m;
-  document.getElementById('td').classList.toggle('on', m==='draw');
-  document.getElementById('tg').classList.toggle('on', m==='gpx');
-  document.getElementById('ctrl-draw').style.display = m==='draw' ? '' : 'none';
-  document.getElementById('ctrl-gpx').style.display  = m==='gpx'  ? '' : 'none';
-  clearArea();
+// Ajusta mapa para não ficar sob header e gaveta
+function resizeMap() {
+  const hh = document.getElementById('hdr').offsetHeight;
+  const dh = document.getElementById('drawer').offsetHeight;
+  document.getElementById('map').style.top = hh + 'px';
+  document.getElementById('map').style.height = (window.innerHeight - hh - dh) + 'px';
+  map.invalidateSize();
 }
 
-// ── DESENHO ───────────────────────────────────────────────────────────────────
+// GAVETA
+function toggleDrawer() {
+  S.drawerOpen = !S.drawerOpen;
+  const d = document.getElementById('drawer');
+  const content = document.getElementById('drawer-content');
+  content.style.display = S.drawerOpen ? '' : 'none';
+  setTimeout(resizeMap, 320);
+}
+
+window.addEventListener('resize', resizeMap);
+setTimeout(resizeMap, 100);
+
+// DESENHO
 function startDraw() {
   clearArea();
   S.drawing = true; S.perimPts = [];
   document.getElementById('btn-start').disabled = true;
   document.getElementById('btn-finish').disabled = false;
   map.getContainer().style.cursor = 'crosshair';
-  toast('Toque no mapa para adicionar pontos. Mín. 3.');
+  document.getElementById('overlay').style.display = 'none';
+  toast('Toque no mapa para adicionar pontos. Mínimo 3.');
 }
 
 map.on('click', function(e) {
   if (!S.drawing) return;
   const pt = [e.latlng.lat, e.latlng.lng];
   S.perimPts.push(pt);
-
   const isFirst = S.perimPts.length === 1;
   const m = L.circleMarker(pt, {
-    radius: isFirst ? 8 : 4,
-    color: '#FFD600', fillColor: '#FFD600',
-    fillOpacity: isFirst ? 1 : 0.6, weight: 2
+    radius: isFirst ? 8 : 4, color:'#FFD600',
+    fillColor:'#FFD600', fillOpacity: isFirst ? 1 : 0.6, weight:2
   }).addTo(map);
-
-  if (isFirst) m.on('click', function(ev) {
-    L.DomEvent.stopPropagation(ev);
-    if (S.perimPts.length >= 3) finishDraw();
-  });
-
+  if (isFirst) m.on('click', ev => { L.DomEvent.stopPropagation(ev); if(S.perimPts.length>=3) finishDraw(); });
   S.drawMarkers.push(m);
   if (S.drawLine) map.removeLayer(S.drawLine);
   if (S.perimPts.length >= 2)
-    S.drawLine = L.polyline(S.perimPts, { color:'#FFD600', weight:2, dashArray:'6 4', opacity:0.7 }).addTo(map);
+    S.drawLine = L.polyline(S.perimPts, {color:'#FFD600',weight:2,dashArray:'6 4',opacity:0.7}).addTo(map);
 });
 
 function finishDraw() {
@@ -313,73 +310,58 @@ function finishDraw() {
 
 function renderPerim() {
   if (S.perimLayer) map.removeLayer(S.perimLayer);
-  S.perimLayer = L.polygon(S.perimPts, {
-    color:'#FFD600', weight:2, fillColor:'#FFD600', fillOpacity:0.06
-  }).addTo(map);
-  map.fitBounds(S.perimLayer.getBounds(), { padding:[30,30] });
-
-  const a = polyArea(S.perimPts);
+  S.perimLayer = L.polygon(S.perimPts, {color:'#FFD600',weight:2,fillColor:'#FFD600',fillOpacity:0.06}).addTo(map);
+  map.fitBounds(S.perimLayer.getBounds(), {padding:[30,30]});
   const lat0 = S.perimPts.reduce((s,p)=>s+p[0],0)/S.perimPts.length;
-  const aKm2 = Math.abs(a) * 111.32 * 111.32 * Math.cos(lat0*Math.PI/180);
-
-  const info = `Área: ${aKm2.toFixed(2)} km²`;
-  document.getElementById('area-info').textContent = info;
-  document.getElementById('area-info').style.display = '';
+  const a = Math.abs(polyArea(S.perimPts)) * 111.32 * 111.32 * Math.cos(lat0*Math.PI/180);
+  const info = `✅ Área: ${a.toFixed(2)} km²`;
+  const el = document.getElementById('area-info');
+  el.textContent = info; el.style.display = '';
   document.getElementById('btn-clear').style.display = '';
-  document.getElementById('overlay').style.display = 'none';
-
-  S.areaOk = true;
-  step(2); checkCalc();
-  toast(`✅ ${info}`);
+  S.areaOk = true; step(2); checkCalc();
+  toast(info);
 }
 
 function polyArea(pts) {
-  let a=0, n=pts.length;
+  let a=0,n=pts.length;
   for(let i=0;i<n;i++){const j=(i+1)%n;a+=pts[i][1]*pts[j][0]-pts[j][1]*pts[i][0];}
   return a/2;
 }
 
 function clearArea() {
-  S.drawing = false; S.perimPts = []; S.areaOk = false;
-  if (S.perimLayer) { map.removeLayer(S.perimLayer); S.perimLayer = null; }
-  S.drawMarkers.forEach(m=>map.removeLayer(m)); S.drawMarkers = [];
-  if (S.drawLine) { map.removeLayer(S.drawLine); S.drawLine = null; }
-  document.getElementById('area-info').style.display = 'none';
-  document.getElementById('area-info-gpx').style.display = 'none';
-  document.getElementById('btn-clear').style.display = 'none';
-  document.getElementById('btn-clr-per').style.display = 'none';
-  document.getElementById('btn-start').disabled = false;
-  document.getElementById('btn-finish').disabled = true;
-  document.getElementById('overlay').style.display = '';
+  S.drawing=false; S.perimPts=[]; S.areaOk=false;
+  if(S.perimLayer){map.removeLayer(S.perimLayer);S.perimLayer=null;}
+  S.drawMarkers.forEach(m=>map.removeLayer(m)); S.drawMarkers=[];
+  if(S.drawLine){map.removeLayer(S.drawLine);S.drawLine=null;}
+  document.getElementById('area-info').style.display='none';
+  document.getElementById('btn-clear').style.display='none';
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-finish').disabled=true;
   clearResult(); step(1); checkCalc();
 }
 
-// ── GPX PERÍMETRO ─────────────────────────────────────────────────────────────
+// GPX PERÍMETRO
 function loadPerim(inp) {
-  const f = inp.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = e => {
-    const pts = parseGPX(e.target.result);
-    if (pts.length < 3) { toast('GPX inválido.'); return; }
-    S.perimPts = pts;
-    document.getElementById('btn-clr-per').style.display = '';
-    renderPerim();
-    document.getElementById('area-info-gpx').textContent = document.getElementById('area-info').textContent;
-    document.getElementById('area-info-gpx').style.display = '';
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const pts=parseGPX(e.target.result);
+    if(pts.length<3){toast('GPX inválido.');return;}
+    S.perimPts=pts; renderPerim();
   };
   r.readAsText(f); inp.value='';
 }
 
-// ── GPX PEDALADAS ─────────────────────────────────────────────────────────────
+// GPX PEDALADAS
 function loadRides(inp) {
-  const files = Array.from(inp.files); let done=0;
-  files.forEach(f => {
-    const r = new FileReader();
-    r.onload = e => {
-      S.rides.push({ name: f.name.replace('.gpx',''), points: parseGPX(e.target.result) });
-      if (++done === files.length) {
+  const files=Array.from(inp.files); let done=0;
+  files.forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      S.rides.push({name:f.name.replace('.gpx',''),points:parseGPX(e.target.result)});
+      if(++done===files.length){
         renderRideList(); renderRideLayer(); clearResult();
-        step(S.areaOk ? 3 : 2); checkCalc();
+        step(S.areaOk?3:2); checkCalc();
         toast(`${files.length} pedalada(s) carregada(s)`);
       }
     };
@@ -388,109 +370,91 @@ function loadRides(inp) {
   inp.value='';
 }
 
-function removeRide(i) {
-  S.rides.splice(i,1); renderRideList(); renderRideLayer(); clearResult(); checkCalc();
-}
+function removeRide(i){S.rides.splice(i,1);renderRideList();renderRideLayer();clearResult();checkCalc();}
 
-function renderRideList() {
-  const el = document.getElementById('ride-list');
-  el.innerHTML = S.rides.map((r,i) =>
+function renderRideList(){
+  document.getElementById('ride-list').innerHTML=S.rides.map((r,i)=>
     `<div class="gpx-item">
       <span class="gpx-name" title="${r.name}">${r.name}</span>
-      <span style="color:var(--dim);font-size:9px;margin:0 6px">${(r.points.length/1000).toFixed(1)}k</span>
+      <span style="color:var(--dim);font-size:9px;margin:0 6px;flex-shrink:0">${(r.points.length/1000).toFixed(1)}k pts</span>
       <button class="gpx-rm" onclick="removeRide(${i})">✕</button>
     </div>`
   ).join('');
 }
 
-function renderRideLayer() {
-  if (S.rideLayer) { map.removeLayer(S.rideLayer); S.rideLayer = null; }
-  if (!S.rides.length) return;
-  S.rideLayer = L.layerGroup(
-    S.rides.map(r => L.polyline(r.points, { color:'#4FC3F7', weight:1.5, opacity:0.4 }))
-  ).addTo(map);
+function renderRideLayer(){
+  if(S.rideLayer){map.removeLayer(S.rideLayer);S.rideLayer=null;}
+  if(!S.rides.length) return;
+  S.rideLayer=L.layerGroup(S.rides.map(r=>L.polyline(r.points,{color:'#4FC3F7',weight:1.5,opacity:0.4}))).addTo(map);
 }
 
-// ── PARSE GPX ─────────────────────────────────────────────────────────────────
-function parseGPX(txt) {
-  const doc = new DOMParser().parseFromString(txt, 'application/xml');
-  return Array.from(doc.querySelectorAll('trkpt')).map(t =>
-    [parseFloat(t.getAttribute('lat')), parseFloat(t.getAttribute('lon'))]
-  );
+function parseGPX(txt){
+  const doc=new DOMParser().parseFromString(txt,'application/xml');
+  return Array.from(doc.querySelectorAll('trkpt')).map(t=>[parseFloat(t.getAttribute('lat')),parseFloat(t.getAttribute('lon'))]);
 }
 
-// ── OVERPASS ──────────────────────────────────────────────────────────────────
-async function fetchStreets(poly) {
-  const s = simplify(poly, 80).map(p=>`${p[0]} ${p[1]}`).join(' ');
-  const q = `[out:json][timeout:60];way["highway"]["highway"!~"footway|cycleway|path|steps|pedestrian|service|track"](poly:"${s}");out geom;`;
-  const res = await fetch('https://overpass-api.de/api/interpreter', {
-    method:'POST', body:'data='+encodeURIComponent(q)
-  });
-  if (!res.ok) throw new Error('Overpass: '+res.status);
+// OVERPASS
+async function fetchStreets(poly){
+  const s=simplify(poly,80).map(p=>`${p[0]} ${p[1]}`).join(' ');
+  const q=`[out:json][timeout:60];way["highway"]["highway"!~"footway|cycleway|path|steps|pedestrian|service|track"](poly:"${s}");out geom;`;
+  const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)});
+  if(!res.ok) throw new Error('Overpass: '+res.status);
   return res.json();
 }
 
-// ── CÁLCULO ───────────────────────────────────────────────────────────────────
-async function calculate() {
-  if (!S.areaOk || !S.rides.length) return;
+// CÁLCULO
+async function calculate(){
+  if(!S.areaOk||!S.rides.length) return;
   load(true,'BAIXANDO RUAS...');
-  try {
-    const data = await fetchStreets(S.perimPts);
-    const ways = data.elements.filter(e=>e.type==='way'&&e.geometry);
+  try{
+    const data=await fetchStreets(S.perimPts);
+    const ways=data.elements.filter(e=>e.type==='way'&&e.geometry);
     load(true,'CALCULANDO...');
-
-    const allPts = S.rides.flatMap(r=>r.points);
-    const THR = 0.00018;
-    const cov=[], miss=[];
-    let covKm=0, misKm=0;
-
-    ways.forEach(w => {
+    const allPts=S.rides.flatMap(r=>r.points);
+    const THR=0.00018;
+    const cov=[],miss=[];
+    let covKm=0,misKm=0;
+    ways.forEach(w=>{
       let len=0;
       for(let i=0;i<w.geometry.length-1;i++)
-        len += hav(w.geometry[i].lat,w.geometry[i].lon,w.geometry[i+1].lat,w.geometry[i+1].lon);
-      const near = minDist(w.geometry, allPts, THR) < THR;
-      if (near) { cov.push(w); covKm+=len; }
-      else       { miss.push(w); misKm+=len; }
+        len+=hav(w.geometry[i].lat,w.geometry[i].lon,w.geometry[i+1].lat,w.geometry[i+1].lon);
+      if(minDist(w.geometry,allPts,THR)<THR){cov.push(w);covKm+=len;}
+      else{miss.push(w);misKm+=len;}
     });
-
-    renderStreets(cov, miss);
-    const tot=covKm+misKm, pct=tot>0?(covKm/tot)*100:0;
-    showResult(covKm, misKm, tot, pct);
-    load(false);
-    toast(`✅ ${pct.toFixed(1)}% coberto`);
-  } catch(err) {
-    load(false); toast('Erro: '+err.message); console.error(err);
-  }
+    renderStreets(cov,miss);
+    const tot=covKm+misKm,pct=tot>0?(covKm/tot)*100:0;
+    showResult(covKm,misKm,tot,pct);
+    load(false); toast(`✅ ${pct.toFixed(1)}% coberto`);
+  }catch(err){load(false);toast('Erro: '+err.message);console.error(err);}
 }
 
-function hav(a,b,c,d) {
+function hav(a,b,c,d){
   const R=6371,dl=(c-a)*Math.PI/180,dL=(d-b)*Math.PI/180;
   const x=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dL/2)**2;
   return R*2*Math.asin(Math.sqrt(x));
 }
 
-function minDist(nodes, pts, thr) {
+function minDist(nodes,pts,thr){
   for(const n of nodes) for(const p of pts)
-    if(Math.abs(n.lat-p[0])<thr && Math.abs(n.lon-p[1])<thr) return 0;
+    if(Math.abs(n.lat-p[0])<thr&&Math.abs(n.lon-p[1])<thr) return 0;
   return 999;
 }
 
-function simplify(pts, max) {
+function simplify(pts,max){
   if(pts.length<=max) return pts;
   const s=Math.ceil(pts.length/max);
   return pts.filter((_,i)=>i%s===0);
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
-function renderStreets(cov, miss) {
-  if(S.streetL.cov)  map.removeLayer(S.streetL.cov);
-  if(S.streetL.miss) map.removeLayer(S.streetL.miss);
-  const ll = w => w.geometry.map(n=>[n.lat,n.lon]);
-  S.streetL.miss = L.layerGroup(miss.map(w=>L.polyline(ll(w),{color:'#2A3530',weight:2.5,opacity:1}))).addTo(map);
-  S.streetL.cov  = L.layerGroup(cov.map(w=>L.polyline(ll(w),{color:'#00FF88',weight:3.5,opacity:0.95}))).addTo(map);
+function renderStreets(cov,miss){
+  if(S.streetL.cov)map.removeLayer(S.streetL.cov);
+  if(S.streetL.miss)map.removeLayer(S.streetL.miss);
+  const ll=w=>w.geometry.map(n=>[n.lat,n.lon]);
+  S.streetL.miss=L.layerGroup(miss.map(w=>L.polyline(ll(w),{color:'#2A3530',weight:2.5,opacity:1}))).addTo(map);
+  S.streetL.cov=L.layerGroup(cov.map(w=>L.polyline(ll(w),{color:'#00FF88',weight:3.5,opacity:0.95}))).addTo(map);
 }
 
-function showResult(cov, mis, tot, pct) {
+function showResult(cov,mis,tot,pct){
   document.getElementById('sec-result').style.display='';
   document.getElementById('sv-cov').textContent=cov.toFixed(2);
   document.getElementById('sv-mis').textContent=mis.toFixed(2);
@@ -498,36 +462,35 @@ function showResult(cov, mis, tot, pct) {
   document.getElementById('prog').style.width=pct.toFixed(1)+'%';
   document.getElementById('pct').textContent=pct.toFixed(1)+'%';
   step(3,true);
+  // Abrir gaveta para mostrar resultado
+  if(!S.drawerOpen) toggleDrawer();
 }
 
-function clearResult() {
+function clearResult(){
   document.getElementById('sec-result').style.display='none';
-  if(S.streetL.cov)  { map.removeLayer(S.streetL.cov);  S.streetL.cov=null;  }
-  if(S.streetL.miss) { map.removeLayer(S.streetL.miss); S.streetL.miss=null; }
+  if(S.streetL.cov){map.removeLayer(S.streetL.cov);S.streetL.cov=null;}
+  if(S.streetL.miss){map.removeLayer(S.streetL.miss);S.streetL.miss=null;}
 }
 
-// ── UI ────────────────────────────────────────────────────────────────────────
-function checkCalc() {
-  document.getElementById('btn-calc').disabled = !(S.areaOk && S.rides.length>0);
-}
+function checkCalc(){document.getElementById('btn-calc').disabled=!(S.areaOk&&S.rides.length>0);}
 
-function step(n, done) {
-  [1,2,3].forEach(i => {
+function step(n,done){
+  [1,2,3].forEach(i=>{
     const el=document.getElementById('s'+i);
     el.classList.remove('on','done');
-    if(i<n) el.classList.add('done');
-    else if(i===n) el.classList.add('on');
+    if(i<n)el.classList.add('done');
+    else if(i===n)el.classList.add('on');
   });
 }
 
-function load(show, msg) {
-  document.getElementById('loading').style.display = show?'flex':'none';
-  if(msg) document.getElementById('lmsg').textContent=msg;
+function load(show,msg){
+  document.getElementById('loading').style.display=show?'flex':'none';
+  if(msg)document.getElementById('lmsg').textContent=msg;
 }
 
-function toast(msg) {
+function toast(msg){
   const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
+  el.textContent=msg;el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),3000);
 }
 </script>
