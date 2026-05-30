@@ -2,951 +2,533 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cobertura de Ruas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RUTACOB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/togeojson@0.16.0/togeojson.js"></script>
 <style>
-  :root {
-    --bg: #080C0A;
-    --panel: #0E1410;
-    --border: #1A2420;
-    --green: #00FF88;
-    --green-dim: #00FF8822;
-    --yellow: #FFD600;
-    --red: #FF4444;
-    --gray: #2A3530;
-    --text: #C8D8D0;
-    --text-dim: #4A6058;
-    --mono: 'Space Mono', monospace;
-    --display: 'Syne', sans-serif;
-  }
+:root {
+  --bg: #080C0A;
+  --panel: #0E1410;
+  --border: #1A2420;
+  --green: #00FF88;
+  --gdim: #00FF8818;
+  --yellow: #FFD600;
+  --red: #FF4444;
+  --text: #C8D8D0;
+  --dim: #4A6058;
+  --mono: 'Space Mono', monospace;
+  --dis: 'Syne', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); overflow: hidden; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── LAYOUT PRINCIPAL ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+/* ── HEADER ── */
+#hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--panel);
+  border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 1000;
+}
+.logo { font-family: var(--dis); font-size: 16px; color: var(--green); font-weight: 800; }
+.logo small { color: var(--dim); font-family: var(--mono); font-size: 10px; margin-left: 6px; }
+.tabs { display: flex; gap: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px; }
+.tab { padding: 5px 10px; border-radius: 3px; border: none; background: transparent; color: var(--dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+.tab.on { background: var(--gdim); color: var(--green); border: 1px solid #00FF8833; }
 
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--panel);
-    flex-shrink: 0;
-    z-index: 1000;
-  }
+/* ── MAPA ── */
+#map { flex: 1; background: #060A08; z-index: 1; }
 
-  .logo {
-    font-family: var(--display);
-    font-weight: 800;
-    font-size: 18px;
-    color: var(--green);
-    letter-spacing: -0.5px;
-  }
+/* ── PAINEL INFERIOR (mobile-first) ── */
+#panel {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  max-height: 45vh;
+  overflow-y: auto;
+  z-index: 500;
+}
+.prow { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); align-items: flex-start; flex-wrap: wrap; }
+.plabel { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+.psec { padding: 10px 14px; border-bottom: 1px solid var(--border); }
 
-  .logo span { color: var(--text-dim); font-weight: 400; font-size: 12px; margin-left: 8px; letter-spacing: 2px; text-transform: uppercase; }
+/* ── BOTÕES ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 9px 14px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--dim); font-family: var(--mono);
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn:hover { border-color: #00FF8844; color: var(--text); }
+.btn.pri { background: var(--gdim); border-color: #00FF8855; color: var(--green); }
+.btn.pri:hover { border-color: var(--green); }
+.btn.danger { border-color: #FF444433; color: #FF444488; }
+.btn.danger:hover { border-color: var(--red); color: var(--red); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-full { width: 100%; }
 
-  .mode-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 3px;
-  }
+/* ── STEPS ── */
+.steps { display: flex; gap: 6px; }
+.step { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); text-align: center; }
+.step.on { border-color: #00FF8844; background: var(--gdim); }
+.step.done { opacity: 0.5; }
+.step-n { font-size: 10px; color: var(--dim); }
+.step.on .step-n { color: var(--green); }
+.step-t { font-size: 9px; color: var(--dim); margin-top: 3px; line-height: 1.3; }
+.step.on .step-t { color: var(--text); }
 
-  .tab {
-    padding: 6px 14px;
-    border-radius: 4px;
-    border: none;
-    background: transparent;
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
+/* ── UPLOAD ── */
+.upload {
+  border: 1px dashed var(--border); border-radius: 5px; padding: 12px;
+  text-align: center; cursor: pointer; background: var(--bg); transition: all 0.2s;
+}
+.upload:hover { border-color: #00FF8855; background: var(--gdim); }
+.upload p { font-size: 10px; color: var(--dim); line-height: 1.6; }
+.upload strong { color: var(--green); }
 
-  .tab.active {
-    background: var(--green-dim);
-    color: var(--green);
-    border: 1px solid var(--green)44;
-  }
+/* ── GPX LIST ── */
+.gpx-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; margin-bottom: 4px; font-size: 10px;
+}
+.gpx-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.gpx-rm { background: none; border: none; color: var(--dim); cursor: pointer; padding: 0 4px; font-size: 12px; }
+.gpx-rm:hover { color: var(--red); }
 
-  /* ── LAYOUT ── */
-  .workspace {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
+/* ── STATS ── */
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.stat { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; }
+.stat-l { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
+.stat-v { font-family: var(--dis); font-size: 18px; font-weight: 700; color: var(--green); }
+.stat-u { font-size: 8px; color: var(--dim); }
+.stat.miss .stat-v { color: var(--yellow); }
+.stat.tot .stat-v { color: var(--text); font-size: 15px; }
 
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 280px;
-    flex-shrink: 0;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
+/* ── PROGRESS ── */
+.prog-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; height: 5px; overflow: hidden; margin: 8px 0 4px; }
+.prog-bar { height: 100%; background: linear-gradient(90deg, var(--green), #00DDAA); width: 0%; transition: width 0.6s; }
+.prog-lbl { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); }
 
-  .section {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-  }
+/* ── OVERLAY ── */
+#overlay {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: rgba(8,12,10,0.92); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px 24px; text-align: center; z-index: 200;
+  pointer-events: none; max-width: 260px;
+}
+#overlay h3 { font-family: var(--dis); font-size: 15px; color: var(--green); margin-bottom: 6px; }
+#overlay p { font-size: 10px; color: var(--dim); line-height: 1.7; }
 
-  .section-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-  }
+/* ── LOADING ── */
+#loading {
+  position: fixed; inset: 0; background: rgba(8,12,10,0.88);
+  display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9000;
+}
+.spin { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: sp 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes sp { to { transform: rotate(360deg); } }
+#loading p { font-size: 10px; color: var(--dim); letter-spacing: 2px; }
 
-  /* ── STEP INDICATOR ── */
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 20px; right: 16px; left: 16px;
+  background: var(--panel); border: 1px solid #00FF8844; border-radius: 6px;
+  padding: 10px 14px; font-size: 11px; color: var(--green);
+  z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; text-align: center;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
 
-  .step {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 5px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    transition: all 0.2s;
-  }
-
-  .step.active {
-    border-color: var(--green)44;
-    background: var(--green-dim);
-  }
-
-  .step.done {
-    border-color: var(--green)22;
-    opacity: 0.6;
-  }
-
-  .step-num {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 1px solid var(--text-dim);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
-
-  .step.active .step-num {
-    border-color: var(--green);
-    color: var(--green);
-    background: var(--green-dim);
-  }
-
-  .step.done .step-num {
-    border-color: var(--green);
-    color: var(--green);
-    content: '✓';
-  }
-
-  .step-text {
-    font-size: 11px;
-    line-height: 1.4;
-    color: var(--text-dim);
-  }
-
-  .step.active .step-text { color: var(--text); }
-
-  /* ── BUTTONS ── */
-  .btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-bottom: 6px;
-  }
-
-  .btn:hover { border-color: var(--green)44; color: var(--text); }
-
-  .btn.primary {
-    background: var(--green-dim);
-    border-color: var(--green)66;
-    color: var(--green);
-  }
-
-  .btn.primary:hover { background: var(--green)22; border-color: var(--green); }
-
-  .btn.danger {
-    border-color: var(--red)33;
-    color: var(--red)88;
-  }
-
-  .btn.danger:hover { border-color: var(--red); color: var(--red); }
-
-  .btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-
-  /* ── FILE UPLOAD ── */
-  .upload-area {
-    border: 1px dashed var(--border);
-    border-radius: 5px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--bg);
-    margin-bottom: 8px;
-  }
-
-  .upload-area:hover, .upload-area.drag { border-color: var(--green)66; background: var(--green-dim); }
-  .upload-area p { font-size: 10px; color: var(--text-dim); line-height: 1.6; }
-  .upload-area strong { color: var(--green); font-size: 11px; }
-
-  /* ── GPX LIST ── */
-  .gpx-list { display: flex; flex-direction: column; gap: 4px; }
-
-  .gpx-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 10px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 10px;
-  }
-
-  .gpx-item-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-  .gpx-item-pts { color: var(--text-dim); flex-shrink: 0; margin-left: 6px; }
-
-  .gpx-remove {
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    padding: 0 2px;
-    font-size: 12px;
-    flex-shrink: 0;
-  }
-
-  .gpx-remove:hover { color: var(--red); }
-
-  /* ── STATS ── */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .stat {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 10px;
-  }
-
-  .stat-label { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
-  .stat-value { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--green); }
-  .stat-unit { font-size: 9px; color: var(--text-dim); }
-  .stat.missing .stat-value { color: var(--yellow); }
-  .stat.total .stat-value { color: var(--text); font-size: 16px; }
-
-  /* ── PROGRESS BAR ── */
-  .progress-wrap {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    height: 6px;
-    margin-bottom: 6px;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--green), #00DDAA);
-    transition: width 0.6s ease;
-    width: 0%;
-  }
-
-  .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 9px;
-    color: var(--text-dim);
-  }
-
-  /* ── MAP ── */
-  #map {
-    flex: 1;
-    background: #060A08;
-  }
-
-  /* ── INSTRUCTIONS OVERLAY ── */
-  #instructions {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(8, 12, 10, 0.92);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px 28px;
-    text-align: center;
-    z-index: 500;
-    pointer-events: none;
-    max-width: 300px;
-  }
-
-  #instructions h3 {
-    font-family: var(--display);
-    font-size: 16px;
-    color: var(--green);
-    margin-bottom: 8px;
-  }
-
-  #instructions p {
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.7;
-  }
-
-  /* ── TOAST ── */
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--panel);
-    border: 1px solid var(--green)44;
-    border-radius: 6px;
-    padding: 12px 16px;
-    font-size: 11px;
-    color: var(--green);
-    z-index: 9999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s;
-    max-width: 260px;
-  }
-
-  #toast.show { transform: translateY(0); opacity: 1; }
-
-  /* ── LOADING ── */
-  #loading {
-    position: fixed;
-    inset: 0;
-    background: rgba(8,12,10,0.85);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9998;
-    display: none;
-  }
-
-  .spinner {
-    width: 36px;
-    height: 36px;
-    border: 2px solid var(--border);
-    border-top-color: var(--green);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-bottom: 14px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #loading p { font-size: 11px; color: var(--text-dim); letter-spacing: 2px; }
-
-  /* leaflet overrides */
-  .leaflet-container { background: #060A08 !important; }
-  .leaflet-control-zoom a {
-    background: var(--panel) !important;
-    color: var(--text) !important;
-    border-color: var(--border) !important;
-  }
+.leaflet-container { background: #060A08 !important; }
+.leaflet-control-zoom a { background: var(--panel) !important; color: var(--text) !important; border-color: var(--border) !important; }
 </style>
 </head>
 <body>
+<div id="app">
 
-<header>
-  <div class="logo">RUTACOB <span>v3.1</span></div>
-  <div class="mode-tabs">
-    <button class="tab active" onclick="setMode('draw')" id="tab-draw">✏ Desenhar área</button>
-    <button class="tab" onclick="setMode('gpx')" id="tab-gpx">📁 GPX perímetro</button>
+  <!-- HEADER -->
+  <div id="hdr">
+    <div class="logo">RUTACOB <small>v3.2</small></div>
+    <div class="tabs">
+      <button class="tab on" id="td" onclick="setMode('draw')">✏ Desenhar</button>
+      <button class="tab" id="tg" onclick="setMode('gpx')">📁 GPX</button>
+    </div>
   </div>
-  <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;">Porto Alegre · RS</div>
-</header>
 
-<div class="workspace">
-  <div class="sidebar">
+  <!-- MAPA -->
+  <div style="position:relative; flex:1; min-height:0;">
+    <div id="map" style="width:100%;height:100%;"></div>
+    <div id="overlay">
+      <h3>Defina a área</h3>
+      <p>Toque em <strong style="color:var(--green)">Começar</strong> abaixo e clique no mapa para traçar o perímetro do bairro.</p>
+    </div>
+  </div>
+
+  <!-- PAINEL INFERIOR -->
+  <div id="panel">
 
     <!-- STEPS -->
-    <div class="section">
-      <div class="section-label">Fluxo</div>
+    <div class="psec">
       <div class="steps">
-        <div class="step active" id="step1">
-          <div class="step-num">1</div>
-          <div class="step-text">Defina a área do bairro</div>
-        </div>
-        <div class="step" id="step2">
-          <div class="step-num">2</div>
-          <div class="step-text">Suba os GPX das pedaladas</div>
-        </div>
-        <div class="step" id="step3">
-          <div class="step-num">3</div>
-          <div class="step-text">Calcule a cobertura</div>
-        </div>
+        <div class="step on" id="s1"><div class="step-n">1</div><div class="step-t">Área</div></div>
+        <div class="step" id="s2"><div class="step-n">2</div><div class="step-t">Pedaladas</div></div>
+        <div class="step" id="s3"><div class="step-n">3</div><div class="step-t">Calcular</div></div>
       </div>
     </div>
 
     <!-- ÁREA -->
-    <div class="section" id="area-section">
-      <div class="section-label">Área do bairro</div>
+    <div class="psec" id="sec-area">
+      <div class="plabel">Área do bairro</div>
 
       <!-- Modo desenho -->
-      <div id="draw-controls">
-        <button class="btn primary" id="btn-start-draw" onclick="startDrawing()">✏ Começar a desenhar</button>
-        <button class="btn" id="btn-finish-draw" onclick="finishDrawing()" disabled>✓ Fechar perímetro</button>
-        <button class="btn danger" id="btn-clear-draw" onclick="clearArea()" style="display:none">✕ Limpar área</button>
-        <p style="font-size:9px;color:var(--text-dim);line-height:1.6;margin-top:8px;">
-          Clique no mapa para adicionar pontos. Clique no primeiro ponto para fechar.
-        </p>
+      <div id="ctrl-draw">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn pri" id="btn-start" onclick="startDraw()">✏ Começar</button>
+          <button class="btn" id="btn-finish" onclick="finishDraw()" disabled>✓ Fechar</button>
+          <button class="btn danger" id="btn-clear" onclick="clearArea()" style="display:none">✕ Limpar</button>
+        </div>
+        <div id="area-info" style="display:none;margin-top:8px;font-size:11px;color:var(--green)"></div>
       </div>
 
       <!-- Modo GPX perímetro -->
-      <div id="gpx-perimeter-controls" style="display:none">
-        <div class="upload-area" id="upload-perimeter" onclick="document.getElementById('input-perimeter').click()">
-          <p><strong>Clique para subir</strong><br>GPX do perímetro<br>.gpx exportado do Strava</p>
+      <div id="ctrl-gpx" style="display:none">
+        <div class="upload" onclick="document.getElementById('inp-per').click()">
+          <p><strong>Toque para subir</strong><br>GPX do perímetro</p>
         </div>
-        <input type="file" id="input-perimeter" accept=".gpx" style="display:none" onchange="loadPerimeterGPX(this)">
-        <button class="btn danger" id="btn-clear-perimeter" onclick="clearArea()" style="display:none">✕ Limpar área</button>
-      </div>
-
-      <div id="area-info" style="display:none;margin-top:10px;">
-        <div style="font-size:10px;color:var(--text-dim);">Área definida</div>
-        <div style="font-family:var(--display);font-size:18px;color:var(--green)" id="area-km2">—</div>
-        <div style="font-size:9px;color:var(--text-dim);">km²</div>
+        <input type="file" id="inp-per" accept=".gpx" style="display:none" onchange="loadPerim(this)">
+        <button class="btn danger" id="btn-clr-per" onclick="clearArea()" style="display:none;margin-top:6px;">✕ Limpar</button>
+        <div id="area-info-gpx" style="display:none;margin-top:8px;font-size:11px;color:var(--green)"></div>
       </div>
     </div>
 
-    <!-- GPX PEDALADAS -->
-    <div class="section">
-      <div class="section-label">Pedaladas</div>
-      <div class="upload-area" id="upload-rides" onclick="document.getElementById('input-rides').click()">
-        <p><strong>Clique para subir</strong><br>GPX das pedaladas<br>Pode selecionar vários</p>
+    <!-- PEDALADAS -->
+    <div class="psec">
+      <div class="plabel">Pedaladas GPX</div>
+      <div class="upload" onclick="document.getElementById('inp-rides').click()">
+        <p><strong>Toque para subir</strong><br>Pode selecionar vários GPX</p>
       </div>
-      <input type="file" id="input-rides" accept=".gpx" multiple style="display:none" onchange="loadRideGPX(this)">
-      <div class="gpx-list" id="gpx-list"></div>
+      <input type="file" id="inp-rides" accept=".gpx" multiple style="display:none" onchange="loadRides(this)">
+      <div id="ride-list" style="margin-top:8px;"></div>
     </div>
 
     <!-- CALCULAR -->
-    <div class="section">
-      <button class="btn primary" id="btn-calc" onclick="calculate()" disabled>⚡ Calcular cobertura</button>
-      <button class="btn" onclick="exportMap()" id="btn-export" disabled>↓ Exportar mapa HTML</button>
+    <div class="psec">
+      <button class="btn pri btn-full" id="btn-calc" onclick="calculate()" disabled>⚡ Calcular cobertura</button>
     </div>
 
-    <!-- RESULTADOS -->
-    <div class="section" id="results-section" style="display:none">
-      <div class="section-label">Resultado</div>
-      <div class="stats-grid">
-        <div class="stat">
-          <div class="stat-label">Coberto</div>
-          <div class="stat-value" id="stat-covered">—</div>
-          <div class="stat-unit">km</div>
-        </div>
-        <div class="stat missing">
-          <div class="stat-label">Faltando</div>
-          <div class="stat-value" id="stat-missing">—</div>
-          <div class="stat-unit">km</div>
-        </div>
-        <div class="stat total" style="grid-column:1/-1">
-          <div class="stat-label">Total de ruas na área</div>
-          <div class="stat-value" id="stat-total">—</div>
-          <div class="stat-unit">km</div>
-        </div>
+    <!-- RESULTADO -->
+    <div class="psec" id="sec-result" style="display:none">
+      <div class="plabel">Resultado</div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">Coberto</div><div class="stat-v" id="sv-cov">—</div><div class="stat-u">km</div></div>
+        <div class="stat miss"><div class="stat-l">Faltando</div><div class="stat-v" id="sv-mis">—</div><div class="stat-u">km</div></div>
+        <div class="stat tot"><div class="stat-l">Total</div><div class="stat-v" id="sv-tot">—</div><div class="stat-u">km</div></div>
       </div>
-      <div class="progress-wrap">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
-      <div class="progress-label">
-        <span id="pct-label">0%</span>
-        <span style="color:var(--text-dim)">cobertura</span>
-      </div>
+      <div class="prog-wrap"><div class="prog-bar" id="prog"></div></div>
+      <div class="prog-lbl"><span id="pct">0%</span><span>cobertura</span></div>
     </div>
 
-  </div>
-
-  <!-- MAP -->
-  <div style="position:relative;flex:1;">
-    <div id="map"></div>
-    <div id="instructions">
-      <h3>Defina a área</h3>
-      <p>Use o modo <strong style="color:var(--green)">Desenhar</strong> para clicar no mapa e traçar o perímetro do bairro — ou suba um GPX de perímetro.</p>
-    </div>
   </div>
 </div>
 
 <!-- LOADING -->
-<div id="loading">
-  <div class="spinner"></div>
-  <p id="loading-msg">CARREGANDO RUAS...</p>
-</div>
-
+<div id="loading"><div class="spin"></div><p id="lmsg">CARREGANDO...</p></div>
 <!-- TOAST -->
 <div id="toast"></div>
 
 <script>
 // ── ESTADO ──────────────────────────────────────────────────────────────────
-const state = {
-  mode: 'draw',           // 'draw' | 'gpx'
-  drawing: false,
-  perimeterPoints: [],    // [[lat,lon], ...]
-  perimeterPolygon: null, // Leaflet layer
-  drawPoints: [],         // Leaflet markers durante desenho
-  drawPolyline: null,
-  rides: [],              // [{name, points:[lat,lon]}]
-  rideLayer: null,
-  streetLayers: { covered: null, notCovered: null },
-  areaDefined: false,
-  resultReady: false,
+const S = {
+  mode: 'draw', drawing: false,
+  perimPts: [], perimLayer: null,
+  drawMarkers: [], drawLine: null,
+  rides: [], rideLayer: null,
+  streetL: { cov: null, miss: null },
+  areaOk: false,
 };
 
 // ── MAPA ─────────────────────────────────────────────────────────────────────
-const map = L.map('map', {
-  center: [-30.03, -51.20],
-  zoom: 13,
-  zoomControl: true,
-});
-
+const map = L.map('map', { center: [-30.03, -51.20], zoom: 13, zoomControl: true });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OSM © Carto',
-  maxZoom: 19,
+  attribution: '© OSM © Carto', maxZoom: 19
 }).addTo(map);
 
 // ── MODO ─────────────────────────────────────────────────────────────────────
 function setMode(m) {
-  state.mode = m;
-  document.getElementById('tab-draw').classList.toggle('active', m === 'draw');
-  document.getElementById('tab-gpx').classList.toggle('active', m === 'gpx');
-  document.getElementById('draw-controls').style.display = m === 'draw' ? '' : 'none';
-  document.getElementById('gpx-perimeter-controls').style.display = m === 'gpx' ? '' : 'none';
+  S.mode = m;
+  document.getElementById('td').classList.toggle('on', m==='draw');
+  document.getElementById('tg').classList.toggle('on', m==='gpx');
+  document.getElementById('ctrl-draw').style.display = m==='draw' ? '' : 'none';
+  document.getElementById('ctrl-gpx').style.display  = m==='gpx'  ? '' : 'none';
   clearArea();
 }
 
 // ── DESENHO ───────────────────────────────────────────────────────────────────
-function startDrawing() {
+function startDraw() {
   clearArea();
-  state.drawing = true;
-  state.perimeterPoints = [];
-  document.getElementById('btn-start-draw').disabled = true;
-  document.getElementById('btn-finish-draw').disabled = false;
+  S.drawing = true; S.perimPts = [];
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-finish').disabled = false;
   map.getContainer().style.cursor = 'crosshair';
-  toast('Clique no mapa para adicionar pontos. Mínimo 3.');
+  toast('Toque no mapa para adicionar pontos. Mín. 3.');
 }
 
 map.on('click', function(e) {
-  if (!state.drawing) return;
+  if (!S.drawing) return;
   const pt = [e.latlng.lat, e.latlng.lng];
-  state.perimeterPoints.push(pt);
+  S.perimPts.push(pt);
 
-  // Marcador
-  const marker = L.circleMarker(pt, {
-    radius: state.perimeterPoints.length === 1 ? 7 : 4,
-    color: '#FFD600',
-    fillColor: '#FFD600',
-    fillOpacity: state.perimeterPoints.length === 1 ? 1 : 0.6,
-    weight: 2,
+  const isFirst = S.perimPts.length === 1;
+  const m = L.circleMarker(pt, {
+    radius: isFirst ? 8 : 4,
+    color: '#FFD600', fillColor: '#FFD600',
+    fillOpacity: isFirst ? 1 : 0.6, weight: 2
   }).addTo(map);
 
-  // Clique no primeiro ponto fecha
-  if (state.perimeterPoints.length === 1) {
-    marker.on('click', function(ev) {
-      L.DomEvent.stopPropagation(ev);
-      if (state.perimeterPoints.length >= 3) finishDrawing();
-    });
-  }
+  if (isFirst) m.on('click', function(ev) {
+    L.DomEvent.stopPropagation(ev);
+    if (S.perimPts.length >= 3) finishDraw();
+  });
 
-  state.drawPoints.push(marker);
-
-  // Atualizar linha
-  if (state.drawPolyline) map.removeLayer(state.drawPolyline);
-  if (state.perimeterPoints.length >= 2) {
-    state.drawPolyline = L.polyline(state.perimeterPoints, {
-      color: '#FFD600', weight: 2, opacity: 0.7, dashArray: '6 4',
-    }).addTo(map);
-  }
+  S.drawMarkers.push(m);
+  if (S.drawLine) map.removeLayer(S.drawLine);
+  if (S.perimPts.length >= 2)
+    S.drawLine = L.polyline(S.perimPts, { color:'#FFD600', weight:2, dashArray:'6 4', opacity:0.7 }).addTo(map);
 });
 
-function finishDrawing() {
-  if (state.perimeterPoints.length < 3) { toast('Mínimo 3 pontos para fechar.'); return; }
-  state.drawing = false;
+function finishDraw() {
+  if (S.perimPts.length < 3) { toast('Mínimo 3 pontos.'); return; }
+  S.drawing = false;
   map.getContainer().style.cursor = '';
-  document.getElementById('btn-start-draw').disabled = false;
-  document.getElementById('btn-finish-draw').disabled = true;
-
-  // Limpar marcadores e linha
-  state.drawPoints.forEach(m => map.removeLayer(m));
-  state.drawPoints = [];
-  if (state.drawPolyline) { map.removeLayer(state.drawPolyline); state.drawPolyline = null; }
-
-  renderPerimeter();
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-finish').disabled = true;
+  S.drawMarkers.forEach(m => map.removeLayer(m)); S.drawMarkers = [];
+  if (S.drawLine) { map.removeLayer(S.drawLine); S.drawLine = null; }
+  renderPerim();
 }
 
-function renderPerimeter() {
-  if (state.perimeterPolygon) map.removeLayer(state.perimeterPolygon);
-
-  const pts = [...state.perimeterPoints];
-  state.perimeterPolygon = L.polygon(pts, {
-    color: '#FFD600',
-    weight: 2,
-    fillColor: '#FFD600',
-    fillOpacity: 0.06,
+function renderPerim() {
+  if (S.perimLayer) map.removeLayer(S.perimLayer);
+  S.perimLayer = L.polygon(S.perimPts, {
+    color:'#FFD600', weight:2, fillColor:'#FFD600', fillOpacity:0.06
   }).addTo(map);
+  map.fitBounds(S.perimLayer.getBounds(), { padding:[30,30] });
 
-  map.fitBounds(state.perimeterPolygon.getBounds(), { padding: [40, 40] });
+  const a = polyArea(S.perimPts);
+  const lat0 = S.perimPts.reduce((s,p)=>s+p[0],0)/S.perimPts.length;
+  const aKm2 = Math.abs(a) * 111.32 * 111.32 * Math.cos(lat0*Math.PI/180);
 
-  // Calcular área aproximada (Shoelace em graus → km²)
-  const areaDeg = polygonArea(pts);
-  const lat0 = pts.reduce((s, p) => s + p[0], 0) / pts.length;
-  const kmPerDegLat = 111.32;
-  const kmPerDegLon = 111.32 * Math.cos(lat0 * Math.PI / 180);
-  const areaKm2 = Math.abs(areaDeg) * kmPerDegLat * kmPerDegLon;
-
-  document.getElementById('area-km2').textContent = areaKm2.toFixed(2);
+  const info = `Área: ${aKm2.toFixed(2)} km²`;
+  document.getElementById('area-info').textContent = info;
   document.getElementById('area-info').style.display = '';
-  document.getElementById('btn-clear-draw').style.display = '';
-  document.getElementById('instructions').style.display = 'none';
+  document.getElementById('btn-clear').style.display = '';
+  document.getElementById('overlay').style.display = 'none';
 
-  state.areaDefined = true;
-  updateStep(2);
-  checkCalcReady();
-  toast(`Área definida: ${areaKm2.toFixed(2)} km²`);
+  S.areaOk = true;
+  step(2); checkCalc();
+  toast(`✅ ${info}`);
 }
 
-function polygonArea(pts) {
-  let area = 0;
-  const n = pts.length;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    area += pts[i][1] * pts[j][0];
-    area -= pts[j][1] * pts[i][0];
-  }
-  return area / 2;
+function polyArea(pts) {
+  let a=0, n=pts.length;
+  for(let i=0;i<n;i++){const j=(i+1)%n;a+=pts[i][1]*pts[j][0]-pts[j][1]*pts[i][0];}
+  return a/2;
 }
 
 function clearArea() {
-  state.drawing = false;
-  state.perimeterPoints = [];
-  state.areaDefined = false;
-  if (state.perimeterPolygon) { map.removeLayer(state.perimeterPolygon); state.perimeterPolygon = null; }
-  state.drawPoints.forEach(m => map.removeLayer(m));
-  state.drawPoints = [];
-  if (state.drawPolyline) { map.removeLayer(state.drawPolyline); state.drawPolyline = null; }
+  S.drawing = false; S.perimPts = []; S.areaOk = false;
+  if (S.perimLayer) { map.removeLayer(S.perimLayer); S.perimLayer = null; }
+  S.drawMarkers.forEach(m=>map.removeLayer(m)); S.drawMarkers = [];
+  if (S.drawLine) { map.removeLayer(S.drawLine); S.drawLine = null; }
   document.getElementById('area-info').style.display = 'none';
-  document.getElementById('btn-clear-draw').style.display = 'none';
-  document.getElementById('btn-start-draw').disabled = false;
-  document.getElementById('btn-finish-draw').disabled = true;
-  document.getElementById('btn-clear-perimeter').style.display = 'none';
-  document.getElementById('instructions').style.display = '';
-  clearResults();
-  updateStep(1);
-  checkCalcReady();
+  document.getElementById('area-info-gpx').style.display = 'none';
+  document.getElementById('btn-clear').style.display = 'none';
+  document.getElementById('btn-clr-per').style.display = 'none';
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-finish').disabled = true;
+  document.getElementById('overlay').style.display = '';
+  clearResult(); step(1); checkCalc();
 }
 
 // ── GPX PERÍMETRO ─────────────────────────────────────────────────────────────
-function loadPerimeterGPX(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
+function loadPerim(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
     const pts = parseGPX(e.target.result);
-    if (pts.length < 3) { toast('GPX com menos de 3 pontos — inválido.'); return; }
-    state.perimeterPoints = pts;
-    document.getElementById('btn-clear-perimeter').style.display = '';
-    renderPerimeter();
+    if (pts.length < 3) { toast('GPX inválido.'); return; }
+    S.perimPts = pts;
+    document.getElementById('btn-clr-per').style.display = '';
+    renderPerim();
+    document.getElementById('area-info-gpx').textContent = document.getElementById('area-info').textContent;
+    document.getElementById('area-info-gpx').style.display = '';
   };
-  reader.readAsText(file);
-  input.value = '';
+  r.readAsText(f); inp.value='';
 }
 
 // ── GPX PEDALADAS ─────────────────────────────────────────────────────────────
-function loadRideGPX(input) {
-  const files = Array.from(input.files);
-  let loaded = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const pts = parseGPX(e.target.result);
-      const name = file.name.replace('.gpx', '');
-      state.rides.push({ name, points: pts });
-      loaded++;
-      if (loaded === files.length) {
-        renderRideList();
-        renderRideLayer();
-        updateStep(state.areaDefined ? 3 : 2);
-        checkCalcReady();
-        clearResults();
+function loadRides(inp) {
+  const files = Array.from(inp.files); let done=0;
+  files.forEach(f => {
+    const r = new FileReader();
+    r.onload = e => {
+      S.rides.push({ name: f.name.replace('.gpx',''), points: parseGPX(e.target.result) });
+      if (++done === files.length) {
+        renderRideList(); renderRideLayer(); clearResult();
+        step(S.areaOk ? 3 : 2); checkCalc();
         toast(`${files.length} pedalada(s) carregada(s)`);
       }
     };
-    reader.readAsText(file);
+    r.readAsText(f);
   });
-  input.value = '';
+  inp.value='';
 }
 
 function removeRide(i) {
-  state.rides.splice(i, 1);
-  renderRideList();
-  renderRideLayer();
-  clearResults();
-  checkCalcReady();
+  S.rides.splice(i,1); renderRideList(); renderRideLayer(); clearResult(); checkCalc();
 }
 
 function renderRideList() {
-  const el = document.getElementById('gpx-list');
-  el.innerHTML = '';
-  state.rides.forEach((r, i) => {
-    el.innerHTML += `
-      <div class="gpx-item">
-        <span class="gpx-item-name" title="${r.name}">${r.name}</span>
-        <span class="gpx-item-pts">${(r.points.length/1000).toFixed(1)}k pts</span>
-        <button class="gpx-remove" onclick="removeRide(${i})">✕</button>
-      </div>`;
-  });
+  const el = document.getElementById('ride-list');
+  el.innerHTML = S.rides.map((r,i) =>
+    `<div class="gpx-item">
+      <span class="gpx-name" title="${r.name}">${r.name}</span>
+      <span style="color:var(--dim);font-size:9px;margin:0 6px">${(r.points.length/1000).toFixed(1)}k</span>
+      <button class="gpx-rm" onclick="removeRide(${i})">✕</button>
+    </div>`
+  ).join('');
 }
 
 function renderRideLayer() {
-  if (state.rideLayer) { map.removeLayer(state.rideLayer); state.rideLayer = null; }
-  if (!state.rides.length) return;
-  const layers = state.rides.map(r =>
-    L.polyline(r.points, { color: '#4FC3F7', weight: 1.5, opacity: 0.4 })
-  );
-  state.rideLayer = L.layerGroup(layers).addTo(map);
+  if (S.rideLayer) { map.removeLayer(S.rideLayer); S.rideLayer = null; }
+  if (!S.rides.length) return;
+  S.rideLayer = L.layerGroup(
+    S.rides.map(r => L.polyline(r.points, { color:'#4FC3F7', weight:1.5, opacity:0.4 }))
+  ).addTo(map);
 }
 
 // ── PARSE GPX ─────────────────────────────────────────────────────────────────
-function parseGPX(text) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(text, 'application/xml');
-  const pts = [];
-  doc.querySelectorAll('trkpt').forEach(tp => {
-    pts.push([parseFloat(tp.getAttribute('lat')), parseFloat(tp.getAttribute('lon'))]);
-  });
-  return pts;
+function parseGPX(txt) {
+  const doc = new DOMParser().parseFromString(txt, 'application/xml');
+  return Array.from(doc.querySelectorAll('trkpt')).map(t =>
+    [parseFloat(t.getAttribute('lat')), parseFloat(t.getAttribute('lon'))]
+  );
 }
 
-// ── OVERPASS API ──────────────────────────────────────────────────────────────
-async function fetchStreets(polygon) {
-  // Monta a query Overpass com o polígono
-  const polyStr = polygon.map(p => `${p[0]} ${p[1]}`).join(' ');
-  const query = `
-    [out:json][timeout:60];
-    way["highway"]["highway"!~"footway|cycleway|path|steps|pedestrian|service|track"]
-      (poly:"${polyStr}");
-    out geom;
-  `;
-  const url = 'https://overpass-api.de/api/interpreter';
-  const resp = await fetch(url, {
-    method: 'POST',
-    body: 'data=' + encodeURIComponent(query),
+// ── OVERPASS ──────────────────────────────────────────────────────────────────
+async function fetchStreets(poly) {
+  const s = simplify(poly, 80).map(p=>`${p[0]} ${p[1]}`).join(' ');
+  const q = `[out:json][timeout:60];way["highway"]["highway"!~"footway|cycleway|path|steps|pedestrian|service|track"](poly:"${s}");out geom;`;
+  const res = await fetch('https://overpass-api.de/api/interpreter', {
+    method:'POST', body:'data='+encodeURIComponent(q)
   });
-  if (!resp.ok) throw new Error('Overpass API error: ' + resp.status);
-  return await resp.json();
+  if (!res.ok) throw new Error('Overpass: '+res.status);
+  return res.json();
 }
 
 // ── CÁLCULO ───────────────────────────────────────────────────────────────────
 async function calculate() {
-  if (!state.areaDefined || !state.rides.length) return;
-
-  setLoading(true, 'BAIXANDO RUAS...');
-
+  if (!S.areaOk || !S.rides.length) return;
+  load(true,'BAIXANDO RUAS...');
   try {
-    // Simplificar polígono para Overpass (máx 100 pontos)
-    const poly = simplifyPolygon(state.perimeterPoints, 80);
+    const data = await fetchStreets(S.perimPts);
+    const ways = data.elements.filter(e=>e.type==='way'&&e.geometry);
+    load(true,'CALCULANDO...');
 
-    const data = await fetchStreets(poly);
-    const streets = data.elements.filter(e => e.type === 'way' && e.geometry);
+    const allPts = S.rides.flatMap(r=>r.points);
+    const THR = 0.00018;
+    const cov=[], miss=[];
+    let covKm=0, misKm=0;
 
-    setLoading(true, 'CALCULANDO COBERTURA...');
-
-    // Todos os pontos de pedaladas juntos
-    const allRidePts = state.rides.flatMap(r => r.points);
-
-    const THRESHOLD_DEG = 0.00018; // ~20m
-
-    const covered = [];
-    const notCovered = [];
-    let coveredKm = 0, notCoveredKm = 0;
-
-    streets.forEach(way => {
-      const nodes = way.geometry; // [{lat,lon}]
-      if (nodes.length < 2) return;
-
-      // Comprimento do segmento (Haversine)
-      let wayLen = 0;
-      for (let i = 0; i < nodes.length - 1; i++) {
-        wayLen += haversine(nodes[i].lat, nodes[i].lon, nodes[i+1].lat, nodes[i+1].lon);
-      }
-
-      // Verificar distância mínima para qualquer ponto de pedalada
-      const minDist = minDistToRoute(nodes, allRidePts, THRESHOLD_DEG);
-
-      if (minDist < THRESHOLD_DEG) {
-        covered.push(way);
-        coveredKm += wayLen;
-      } else {
-        notCovered.push(way);
-        notCoveredKm += wayLen;
-      }
+    ways.forEach(w => {
+      let len=0;
+      for(let i=0;i<w.geometry.length-1;i++)
+        len += hav(w.geometry[i].lat,w.geometry[i].lon,w.geometry[i+1].lat,w.geometry[i+1].lon);
+      const near = minDist(w.geometry, allPts, THR) < THR;
+      if (near) { cov.push(w); covKm+=len; }
+      else       { miss.push(w); misKm+=len; }
     });
 
-    const totalKm = coveredKm + notCoveredKm;
-    const pct = totalKm > 0 ? (coveredKm / totalKm) * 100 : 0;
-
-    renderStreets(covered, notCovered);
-    showResults(coveredKm, notCoveredKm, totalKm, pct);
-
-    setLoading(false);
+    renderStreets(cov, miss);
+    const tot=covKm+misKm, pct=tot>0?(covKm/tot)*100:0;
+    showResult(covKm, misKm, tot, pct);
+    load(false);
     toast(`✅ ${pct.toFixed(1)}% coberto`);
-    document.getElementById('btn-export').disabled = false;
-
   } catch(err) {
-    setLoading(false);
-    toast('Erro ao baixar ruas: ' + err.message);
-    console.error(err);
+    load(false); toast('Erro: '+err.message); console.error(err);
   }
 }
 
-// ── DISTÂNCIA ─────────────────────────────────────────────────────────────────
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.asin(Math.sqrt(a));
+function hav(a,b,c,d) {
+  const R=6371,dl=(c-a)*Math.PI/180,dL=(d-b)*Math.PI/180;
+  const x=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dL/2)**2;
+  return R*2*Math.asin(Math.sqrt(x));
 }
 
-function minDistToRoute(wayNodes, ridePts, threshold) {
-  // Verificação rápida: para cada nó do segmento, busca ponto de pedalada próximo
-  for (const node of wayNodes) {
-    for (const rp of ridePts) {
-      const dLat = Math.abs(node.lat - rp[0]);
-      const dLon = Math.abs(node.lon - rp[1]);
-      if (dLat < threshold && dLon < threshold) return 0; // achamos — saída rápida
-    }
-  }
+function minDist(nodes, pts, thr) {
+  for(const n of nodes) for(const p of pts)
+    if(Math.abs(n.lat-p[0])<thr && Math.abs(n.lon-p[1])<thr) return 0;
   return 999;
 }
 
-// ── SIMPLIFICAR POLÍGONO ──────────────────────────────────────────────────────
-function simplifyPolygon(pts, maxPts) {
-  if (pts.length <= maxPts) return pts;
-  const step = Math.ceil(pts.length / maxPts);
-  return pts.filter((_, i) => i % step === 0);
+function simplify(pts, max) {
+  if(pts.length<=max) return pts;
+  const s=Math.ceil(pts.length/max);
+  return pts.filter((_,i)=>i%s===0);
 }
 
-// ── RENDERIZAR RUAS ───────────────────────────────────────────────────────────
-function renderStreets(covered, notCovered) {
-  if (state.streetLayers.covered) map.removeLayer(state.streetLayers.covered);
-  if (state.streetLayers.notCovered) map.removeLayer(state.streetLayers.notCovered);
-
-  const toLatLng = way => way.geometry.map(n => [n.lat, n.lon]);
-
-  state.streetLayers.notCovered = L.layerGroup(
-    notCovered.map(w => L.polyline(toLatLng(w), { color: '#2A3530', weight: 2.5, opacity: 1 }))
-  ).addTo(map);
-
-  state.streetLayers.covered = L.layerGroup(
-    covered.map(w => L.polyline(toLatLng(w), { color: '#00FF88', weight: 3, opacity: 0.95 }))
-  ).addTo(map);
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderStreets(cov, miss) {
+  if(S.streetL.cov)  map.removeLayer(S.streetL.cov);
+  if(S.streetL.miss) map.removeLayer(S.streetL.miss);
+  const ll = w => w.geometry.map(n=>[n.lat,n.lon]);
+  S.streetL.miss = L.layerGroup(miss.map(w=>L.polyline(ll(w),{color:'#2A3530',weight:2.5,opacity:1}))).addTo(map);
+  S.streetL.cov  = L.layerGroup(cov.map(w=>L.polyline(ll(w),{color:'#00FF88',weight:3.5,opacity:0.95}))).addTo(map);
 }
 
-// ── RESULTADOS ────────────────────────────────────────────────────────────────
-function showResults(covKm, misKm, totKm, pct) {
-  document.getElementById('results-section').style.display = '';
-  document.getElementById('stat-covered').textContent = covKm.toFixed(2);
-  document.getElementById('stat-missing').textContent = misKm.toFixed(2);
-  document.getElementById('stat-total').textContent = totKm.toFixed(2);
-  document.getElementById('progress-bar').style.width = pct.toFixed(1) + '%';
-  document.getElementById('pct-label').textContent = pct.toFixed(1) + '%';
-  state.resultReady = true;
-  updateStep(3, true);
+function showResult(cov, mis, tot, pct) {
+  document.getElementById('sec-result').style.display='';
+  document.getElementById('sv-cov').textContent=cov.toFixed(2);
+  document.getElementById('sv-mis').textContent=mis.toFixed(2);
+  document.getElementById('sv-tot').textContent=tot.toFixed(2);
+  document.getElementById('prog').style.width=pct.toFixed(1)+'%';
+  document.getElementById('pct').textContent=pct.toFixed(1)+'%';
+  step(3,true);
 }
 
-function clearResults() {
-  document.getElementById('results-section').style.display = 'none';
-  if (state.streetLayers.covered) { map.removeLayer(state.streetLayers.covered); state.streetLayers.covered = null; }
-  if (state.streetLayers.notCovered) { map.removeLayer(state.streetLayers.notCovered); state.streetLayers.notCovered = null; }
-  state.resultReady = false;
-  document.getElementById('btn-export').disabled = true;
+function clearResult() {
+  document.getElementById('sec-result').style.display='none';
+  if(S.streetL.cov)  { map.removeLayer(S.streetL.cov);  S.streetL.cov=null;  }
+  if(S.streetL.miss) { map.removeLayer(S.streetL.miss); S.streetL.miss=null; }
 }
 
-// ── EXPORT ────────────────────────────────────────────────────────────────────
-function exportMap() {
-  toast('Use Ctrl+S / Salvar página no navegador para exportar o mapa.');
+// ── UI ────────────────────────────────────────────────────────────────────────
+function checkCalc() {
+  document.getElementById('btn-calc').disabled = !(S.areaOk && S.rides.length>0);
 }
 
-// ── UI HELPERS ────────────────────────────────────────────────────────────────
-function checkCalcReady() {
-  document.getElementById('btn-calc').disabled = !(state.areaDefined && state.rides.length > 0);
-}
-
-function updateStep(n, done) {
+function step(n, done) {
   [1,2,3].forEach(i => {
-    const el = document.getElementById('step'+i);
-    el.classList.remove('active','done');
-    if (i < n) el.classList.add('done');
-    else if (i === n) el.classList.add('active');
+    const el=document.getElementById('s'+i);
+    el.classList.remove('on','done');
+    if(i<n) el.classList.add('done');
+    else if(i===n) el.classList.add('on');
   });
 }
 
-function setLoading(show, msg) {
-  document.getElementById('loading').style.display = show ? 'flex' : 'none';
-  if (msg) document.getElementById('loading-msg').textContent = msg;
+function load(show, msg) {
+  document.getElementById('loading').style.display = show?'flex':'none';
+  if(msg) document.getElementById('lmsg').textContent=msg;
 }
 
 function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
 }
 </script>
 </body>
