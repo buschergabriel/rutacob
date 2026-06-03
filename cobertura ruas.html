@@ -21,9 +21,11 @@
   #row-search{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:7px;align-items:center;flex-shrink:0}
   #bairro-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
   #bairro-input:focus{border-color:var(--am)}
-  #row-toolbar{background:var(--bg);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:7px;flex-shrink:0;overflow-x:auto}
-  .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 11px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
+  #row-toolbar{background:var(--bg);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:6px;flex-shrink:0;overflow-x:auto}
+  .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
   .btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
+  .btn.on-move{background:#001A1A;border-color:#00CCCC;color:#00CCCC}
+  .btn.on-del{background:#1A0000;border-color:var(--red);color:var(--red)}
   .btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
   .btn.danger{border-color:#3A1010;color:#884444}
   .btn.sm{padding:6px 9px;font-size:13px}
@@ -47,14 +49,16 @@
   .rtag.real{background:#0A1F0A;border:1px solid #1A4A1A;color:var(--green)}
   .rtag.est{background:#1A1200;border:1px solid #3A2A00;color:var(--orange)}
   .gps-dot{width:14px;height:14px;border-radius:50%;background:#4A90FF;border:2px solid white;box-shadow:0 0 8px #4A90FF}
-  .vertex-icon{width:12px;height:12px;border-radius:50%;background:var(--am);border:2px solid #fff;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.5)}
-  .vertex-icon.del-mode{background:var(--red);cursor:pointer}
+  .vx{width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+  .vx.add-mode{background:var(--am);cursor:crosshair}
+  .vx.move-mode{background:#00CCCC;cursor:grab}
+  .vx.del-mode{background:var(--red);cursor:pointer}
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v2.2</div></div>
+  <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v2.3</div></div>
 </div>
 
 <div id="row-inputs">
@@ -66,14 +70,15 @@
 <div id="row-search">
   <input id="bairro-input" placeholder="🔍 Buscar bairro (ex: Rubem Berta, POA)"/>
   <button class="btn" onclick="buscarBairro()">BUSCAR</button>
-  <button class="btn sm" onclick="irGPS()" title="Minha localização">📍</button>
+  <button class="btn sm" onclick="irGPS()">📍</button>
 </div>
 
 <div id="row-toolbar">
-  <button class="btn on" id="btnAdd" onclick="setMode('add')">✚ Adicionar</button>
-  <button class="btn"    id="btnDel" onclick="setMode('del')">✕ Remover pt</button>
-  <button class="btn primary"        onclick="gerar()">▶ GERAR</button>
-  <button class="btn danger"         onclick="limpar()">🗑 Limpar</button>
+  <button class="btn on"  id="btnAdd"  onclick="setMode('add')">✚ Adicionar</button>
+  <button class="btn"     id="btnMove" onclick="setMode('move')">✎ Mover</button>
+  <button class="btn"     id="btnDel"  onclick="setMode('del')">✕ Remover</button>
+  <button class="btn primary"          onclick="gerar()">▶ GERAR</button>
+  <button class="btn danger"           onclick="limpar()">🗑</button>
 </div>
 
 <div id="map"></div>
@@ -106,7 +111,8 @@ const map = L.map('map', {zoomControl:true, attributionControl:false});
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
 map.setView([-30.0112, -51.0960], 15);
 
-let mode='add', pts=[], polyLayer=null, vtxMarkers=[], routeLayer=null, startMkr=null, gpsMkr=null;
+let mode = 'add';
+let pts = [], polyLayer = null, vtxMarkers = [], routeLayer = null, startMkr = null, gpsMkr = null;
 
 // ── STATUS ────────────────────────────────────────────────────
 function st(msg, cls) {
@@ -115,15 +121,19 @@ function st(msg, cls) {
 }
 
 // ── MODE ──────────────────────────────────────────────────────
+const modeConfig = {
+  add:  { btn:'btnAdd',  cls:'on',       hint:'Toque no mapa para adicionar pontos ao perímetro' },
+  move: { btn:'btnMove', cls:'on-move',  hint:'Toque e arraste um ponto amarelo para movê-lo' },
+  del:  { btn:'btnDel',  cls:'on-del',   hint:'Toque num ponto para removê-lo' },
+};
 function setMode(m) {
   mode = m;
-  ['btnAdd','btnDel'].forEach(id => document.getElementById(id).classList.remove('on'));
-  document.getElementById(m==='add'?'btnAdd':'btnDel').classList.add('on');
-  vtxMarkers.forEach(mkr => {
-    const el = mkr.getElement();
-    if (el) el.querySelector('div').className = 'vertex-icon' + (m==='del' ? ' del-mode' : '');
+  Object.keys(modeConfig).forEach(k => {
+    const b = document.getElementById(modeConfig[k].btn);
+    b.className = 'btn' + (k===m ? ' '+modeConfig[k].cls : '');
   });
-  st(m==='add' ? 'Toque no mapa para adicionar pontos ao perímetro' : 'Toque num ponto amarelo para removê-lo', '');
+  redraw();
+  st(modeConfig[m].hint, '');
 }
 
 // ── DRAW ──────────────────────────────────────────────────────
@@ -132,19 +142,30 @@ function redraw() {
   if (pts.length >= 3)
     polyLayer = L.polygon(pts, {color:'#F5C800', weight:2, fillColor:'#F5C800', fillOpacity:0.07}).addTo(map);
   else if (pts.length >= 2)
-    polyLayer = L.polyline(pts, {color:'#F5C800', weight:2, dashArray:'6,4'}).addTo(map);
+    polyLayer = L.polyline(pts, {color:'#F5C800', weight:2, dashArray:'5,4'}).addTo(map);
 
   vtxMarkers.forEach(m => map.removeLayer(m));
   vtxMarkers = [];
   pts.forEach((pt, i) => {
-    const isDel = (mode === 'del');
+    const draggable = (mode === 'move');
+    const vxClass = mode === 'move' ? 'vx move-mode' : mode === 'del' ? 'vx del-mode' : 'vx add-mode';
     const mkr = L.marker(pt, {
-      draggable: !isDel,
-      icon: L.divIcon({className:'', html:`<div class="vertex-icon${isDel?' del-mode':''}"></div>`, iconSize:[12,12], iconAnchor:[6,6]})
+      draggable,
+      icon: L.divIcon({className:'', html:`<div class="${vxClass}"></div>`, iconSize:[13,13], iconAnchor:[6,6]})
     }).addTo(map);
-    mkr.on('dragend', () => { pts[i] = [mkr.getLatLng().lat, mkr.getLatLng().lng]; redraw(); });
+
+    mkr.on('dragend', () => {
+      pts[i] = [mkr.getLatLng().lat, mkr.getLatLng().lng];
+      redraw();
+      st(`Ponto ${i+1} movido`, 'g');
+    });
     mkr.on('click', e => {
-      if (mode === 'del') { L.DomEvent.stopPropagation(e); pts.splice(i,1); redraw(); st(`Ponto removido — ${pts.length} restantes`,''); }
+      if (mode === 'del') {
+        L.DomEvent.stopPropagation(e);
+        pts.splice(i, 1);
+        redraw();
+        st(`Ponto removido — ${pts.length} restantes`, '');
+      }
     });
     vtxMarkers.push(mkr);
   });
@@ -163,9 +184,9 @@ function irGPS() {
   st('Obtendo localização...','y');
   navigator.geolocation.getCurrentPosition(pos => {
     const {latitude:lat, longitude:lng} = pos.coords;
-    map.setView([lat, lng], 16);
+    map.setView([lat,lng], 16);
     if (gpsMkr) map.removeLayer(gpsMkr);
-    gpsMkr = L.marker([lat,lng], {icon: L.divIcon({className:'', html:'<div class="gps-dot"></div>', iconSize:[14,14], iconAnchor:[7,7]})})
+    gpsMkr = L.marker([lat,lng], {icon:L.divIcon({className:'',html:'<div class="gps-dot"></div>',iconSize:[14,14],iconAnchor:[7,7]})})
       .addTo(map).bindPopup('📍 Você está aqui').openPopup();
     st('Localização encontrada','g');
   }, () => st('Não foi possível obter GPS','r'), {enableHighAccuracy:true, timeout:10000});
@@ -179,41 +200,41 @@ async function buscarBairro() {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Porto Alegre, RS, Brasil')}&format=json&polygon_geojson=1&limit=3`,
-      {headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/2.2'}}
+      {headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/2.3'}}
     );
     const data = await res.json();
-    const item = data.find(d => ['suburb','neighbourhood','quarter'].includes(d.type)) || data[0];
+    const item = data.find(d=>['suburb','neighbourhood','quarter'].includes(d.type)) || data[0];
     if (!item) { st('Bairro não encontrado','r'); return; }
 
     const bb = item.boundingbox;
     map.fitBounds([[+bb[0],+bb[2]], [+bb[1],+bb[3]]], {padding:[20,20]});
 
-    if (item.geojson && (item.geojson.type==='Polygon' || item.geojson.type==='MultiPolygon')) {
+    if (item.geojson && (item.geojson.type==='Polygon'||item.geojson.type==='MultiPolygon')) {
       let coords = item.geojson.type==='Polygon'
         ? item.geojson.coordinates[0]
         : item.geojson.coordinates[0][0];
       const want = Math.min(28, Math.max(16, Math.floor(coords.length/4)));
       const step = Math.max(1, Math.floor(coords.length/want));
-      pts = coords.filter((_,i) => i%step===0).map(c => [c[1],c[0]]);
-      if (pts.length > 1) {
-        const [f,l] = [pts[0], pts[pts.length-1]];
-        if (Math.abs(f[0]-l[0]) < 0.00001 && Math.abs(f[1]-l[1]) < 0.00001) pts.pop();
+      pts = coords.filter((_,i)=>i%step===0).map(c=>[c[1],c[0]]);
+      if (pts.length>1) {
+        const [f,l]=[pts[0],pts[pts.length-1]];
+        if (Math.abs(f[0]-l[0])<0.00001 && Math.abs(f[1]-l[1])<0.00001) pts.pop();
       }
       redraw();
-      st(`"${item.display_name.split(',')[0]}" — arraste pontos para ajustar, depois ▶ GERAR`, 'g');
+      st(`"${item.display_name.split(',')[0]}" — use ✎ Mover para ajustar pontos, depois ▶ GERAR`, 'g');
     } else {
-      st(`Encontrado — desenhe o perímetro manualmente`, 'g');
+      st('Encontrado — desenhe o perímetro manualmente','g');
     }
   } catch(e) { st('Erro na busca','r'); }
 }
-document.getElementById('bairro-input').addEventListener('keydown', e => { if (e.key==='Enter') buscarBairro(); });
+document.getElementById('bairro-input').addEventListener('keydown', e => { if(e.key==='Enter') buscarBairro(); });
 
 // ── LIMPAR ────────────────────────────────────────────────────
 function limpar() {
   pts = [];
-  [polyLayer, routeLayer, startMkr].forEach(l => { if(l) map.removeLayer(l); });
-  vtxMarkers.forEach(m => map.removeLayer(m));
-  polyLayer = routeLayer = startMkr = null; vtxMarkers = [];
+  [polyLayer, routeLayer, startMkr].forEach(l=>{if(l)map.removeLayer(l);});
+  vtxMarkers.forEach(m=>map.removeLayer(m));
+  polyLayer=routeLayer=startMkr=null; vtxMarkers=[];
   document.getElementById('result').classList.remove('show');
   st('Limpo — busque um bairro ou toque no mapa','');
   setMode('add');
@@ -221,18 +242,18 @@ function limpar() {
 
 // ── GEOMETRIA ─────────────────────────────────────────────────
 function scanLine(poly, lat) {
-  const xs = [];
-  for (let i=0; i<poly.length; i++) {
-    const [la,lo]=poly[i], [lb,lp]=poly[(i+1)%poly.length];
-    if ((la<=lat&&lat<lb)||(lb<=lat&&lat<la)) xs.push(lo+(lat-la)/(lb-la)*(lp-lo));
+  const xs=[];
+  for (let i=0;i<poly.length;i++) {
+    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
+    if((la<=lat&&lat<lb)||(lb<=lat&&lat<la)) xs.push(lo+(lat-la)/(lb-la)*(lp-lo));
   }
   return xs.sort((a,b)=>a-b);
 }
 
-// Zigue-zague denso — ponto a cada ~spcM metros em cada faixa
+// Zigue-zague denso com espaçamento em metros
 function coverageLawnmower(poly, spcM) {
   const lats = poly.map(p=>p[0]);
-  const [loLat, hiLat] = [Math.min(...lats), Math.max(...lats)];
+  const [loLat,hiLat] = [Math.min(...lats), Math.max(...lats)];
   const stepLat = spcM / 111320;
   const out = [];
   let ltr = true;
@@ -241,120 +262,122 @@ function coverageLawnmower(poly, spcM) {
     const row = [];
     for (let i=0; i<xs.length-1; i+=2) {
       const stepLon = spcM / (111320 * Math.cos(lat*Math.PI/180));
-      for (let lon=xs[i]; lon<=xs[i+1]; lon+=stepLon) row.push([lat, lon]);
+      for (let lon=xs[i]; lon<=xs[i+1]; lon+=stepLon) row.push([lat,lon]);
     }
-    if (row.length) { if (!ltr) row.reverse(); out.push(...row); ltr=!ltr; }
+    if (row.length) { if(!ltr) row.reverse(); out.push(...row); ltr=!ltr; }
   }
   return out;
 }
 
-// Ponto ótimo de início: canto do bbox que está dentro do polígono
+// Ponto de início: canto da borda mais próximo de um extremo do bbox
 function bestStart(poly) {
-  const lats=poly.map(p=>p[0]), lons=poly.map(p=>p[1]);
-  const corners = [
-    [Math.min(...lats), Math.min(...lons)],
-    [Math.min(...lats), Math.max(...lons)],
-    [Math.max(...lats), Math.min(...lons)],
-    [Math.max(...lats), Math.max(...lons)]
-  ];
-  // Testa pontos na borda do polígono e pega o mais próximo de um canto
-  const border = [];
-  for (let i=0; i<poly.length; i++) {
-    const [la,lo]=poly[i], [lb,lp]=poly[(i+1)%poly.length];
-    for (let t=0; t<=1; t+=0.1) border.push([la+(lb-la)*t, lo+(lp-lo)*t]);
+  const border=[];
+  for (let i=0;i<poly.length;i++) {
+    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
+    for (let t=0;t<=1;t+=0.1) border.push([la+(lb-la)*t,lo+(lp-lo)*t]);
   }
-  let best=border[0], bScore=Infinity;
+  const lats=poly.map(p=>p[0]),lons=poly.map(p=>p[1]);
+  const corners=[[Math.min(...lats),Math.min(...lons)],[Math.min(...lats),Math.max(...lons)],
+                 [Math.max(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+  let best=border[0],bScore=Infinity;
   for (const p of border) {
-    const s = Math.min(...corners.map(c => Math.hypot(p[0]-c[0], p[1]-c[1])));
-    if (s < bScore) { bScore=s; best=p; }
+    const s=Math.min(...corners.map(c=>Math.hypot(p[0]-c[0],p[1]-c[1])));
+    if(s<bScore){bScore=s;best=p;}
   }
   return best;
 }
 
 function haversine(a,b) {
-  const R=6371000, dLat=(b[0]-a[0])*Math.PI/180, dLon=(b[1]-a[1])*Math.PI/180;
+  const R=6371000,dLat=(b[0]-a[0])*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180;
   const s=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(s));
 }
 
 function fmtT(h) {
-  const hh=Math.floor(h), mm=Math.round((h-hh)*60);
-  if (mm===60) return `${hh+1}h00`;
-  return hh>0 ? `${hh}h${String(mm).padStart(2,'0')}` : `${mm}min`;
+  const hh=Math.floor(h),mm=Math.round((h-hh)*60);
+  if(mm===60) return`${hh+1}h00`;
+  return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;
 }
 
-// OSRM /route com chunking de 80 pontos
+// OSRM /route chunked — circuito fechado: adiciona startPt no final
 async function osrmRouteChunked(pts2) {
-  const CHUNK = 80;
-  let totalDist = 0, fullGeom = [];
+  const CHUNK=80;
+  let totalDist=0, fullGeom=[];
   for (let i=0; i<pts2.length; i+=CHUNK-1) {
-    const chunk = pts2.slice(i, i+CHUNK);
-    if (chunk.length < 2) continue;
-    const coords = chunk.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
-    const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
-    const r = await fetch(url, {signal: AbortSignal.timeout(25000)});
-    if (!r.ok) throw new Error('OSRM '+r.status);
-    const d = await r.json();
-    if (d.code !== 'Ok') throw new Error(d.code);
-    totalDist += d.routes[0].distance;
+    const chunk=pts2.slice(i, i+CHUNK);
+    if(chunk.length<2) continue;
+    const coords=chunk.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
+    const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+    const r=await fetch(url,{signal:AbortSignal.timeout(25000)});
+    if(!r.ok) throw new Error('OSRM '+r.status);
+    const d=await r.json();
+    if(d.code!=='Ok') throw new Error(d.code);
+    totalDist+=d.routes[0].distance;
     fullGeom.push(...d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]));
   }
-  return {distM: totalDist, geom: fullGeom};
+  return {distM:totalDist, geom:fullGeom};
 }
 
 // ── GERAR ─────────────────────────────────────────────────────
 async function gerar() {
-  if (pts.length < 3) { st('Adicione pelo menos 3 pontos ao perímetro','r'); return; }
-  const horas    = parseFloat(document.getElementById('iHoras').value) || 3;
-  const cliente  = document.getElementById('iCliente').value || '—';
-  const campanha = document.getElementById('iCampanha').value || '—';
+  if(pts.length<3){st('Adicione pelo menos 3 pontos ao perímetro','r');return;}
+  const horas    = parseFloat(document.getElementById('iHoras').value)||3;
+  const cliente  = document.getElementById('iCliente').value||'—';
+  const campanha = document.getElementById('iCampanha').value||'—';
 
-  // Espaçamento 60m: denso o suficiente sem explodir o número de chunks
   st('Calculando grade de cobertura (60m)...','y');
   const anchors = coverageLawnmower(pts, 60);
-  if (anchors.length < 3) { st('Área muito pequena — amplie o perímetro','r'); return; }
+  if(anchors.length<3){st('Área muito pequena','r');return;}
 
-  // Ponto de início ótimo na borda
   const startPt = bestStart(pts);
-  // Ordena anchors começando pelo mais próximo do startPt
-  anchors.sort((a,b) => haversine(a,startPt) - haversine(b,startPt));
-  const allPts = [startPt, ...anchors];
 
-  if (startMkr) map.removeLayer(startMkr);
-  startMkr = L.circleMarker(startPt, {radius:9, color:'#F5C800', fillColor:'#F5C800', fillOpacity:1, weight:2})
-    .addTo(map).bindPopup('<b>▶ PONTO DE INÍCIO</b>').openPopup();
+  // Ordena anchors: começa pelos mais próximos do startPt (borda)
+  // mantém a ordem de zigue-zague mas rotaciona para começar no ponto certo
+  let minIdx=0, minDist=Infinity;
+  for(let i=0;i<anchors.length;i++){
+    const d=haversine(anchors[i],startPt);
+    if(d<minDist){minDist=d;minIdx=i;}
+  }
+  const ordered=[...anchors.slice(minIdx),...anchors.slice(0,minIdx)];
 
-  const nChunks = Math.ceil(allPts.length / 79);
-  st(`Calculando rota — ${allPts.length} pontos em ${nChunks} blocos OSRM...`, 'y');
+  // CIRCUITO FECHADO: adiciona startPt no início e no final
+  const allPts=[startPt, ...ordered, startPt];
 
-  let distM, geom, viaRua = true;
+  if(startMkr) map.removeLayer(startMkr);
+  startMkr=L.circleMarker(startPt,{radius:9,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2})
+    .addTo(map).bindPopup('<b>▶ PONTO DE INÍCIO / FIM</b>').openPopup();
+
+  const nChunks=Math.ceil(allPts.length/79);
+  st(`Calculando circuito — ${allPts.length} pontos · ${nChunks} blocos OSRM...`,'y');
+
+  let distM,geom,viaRua=true;
   try {
-    const r = await osrmRouteChunked(allPts);
-    distM = r.distM; geom = r.geom;
+    const r=await osrmRouteChunked(allPts);
+    distM=r.distM; geom=r.geom;
   } catch(e) {
     console.error(e);
-    viaRua = false;
-    distM = 0;
-    for (let i=0; i<allPts.length-1; i++) distM += haversine(allPts[i], allPts[i+1]);
-    geom = allPts;
+    viaRua=false;
+    distM=0;
+    for(let i=0;i<allPts.length-1;i++) distM+=haversine(allPts[i],allPts[i+1]);
+    geom=allPts;
   }
 
-  if (routeLayer) map.removeLayer(routeLayer);
-  routeLayer = L.polyline(geom, {color: viaRua?'#C084FC':'#F5A623', weight:3, opacity:.85}).addTo(map);
+  if(routeLayer) map.removeLayer(routeLayer);
+  routeLayer=L.polyline(geom,{color:viaRua?'#C084FC':'#F5A623',weight:3,opacity:.85}).addTo(map);
 
-  const voltaKm = distM / 1000;
-  const voltaHr = voltaKm / SPD;
-  const voltas  = Math.floor(horas / voltaHr);
+  const voltaKm=distM/1000;
+  const voltaHr=voltaKm/SPD;
+  const voltas=Math.floor(horas/voltaHr);
 
-  document.getElementById('rVoltaKm').innerHTML  = `${voltaKm.toFixed(1)}<span>km</span>`;
-  document.getElementById('rVoltaT').innerHTML   = fmtT(voltaHr);
-  document.getElementById('rHLabel').textContent = `${horas}h de veiculação`;
-  document.getElementById('rVoltas').innerHTML   = `${voltas}<span>volta${voltas!==1?'s':''}</span>`;
-  document.getElementById('rTotalKm').innerHTML  = `${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
-  document.getElementById('rInfo').innerHTML     = `<strong>▶ INÍCIO:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}`;
-  document.getElementById('rTag').innerHTML      = `<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`;
+  document.getElementById('rVoltaKm').innerHTML =`${voltaKm.toFixed(1)}<span>km</span>`;
+  document.getElementById('rVoltaT').innerHTML  =fmtT(voltaHr);
+  document.getElementById('rHLabel').textContent=`${horas}h de veiculação`;
+  document.getElementById('rVoltas').innerHTML  =`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
+  document.getElementById('rTotalKm').innerHTML =`${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
+  document.getElementById('rInfo').innerHTML    =`<strong>▶ INÍCIO/FIM:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}`;
+  document.getElementById('rTag').innerHTML     =`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 CIRCUITO VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`;
   document.getElementById('result').classList.add('show');
-  st(`Rota gerada — ${allPts.length} pontos · ${nChunks} blocos · ${viaRua?'OSRM real':'estimativa'}`, 'g');
+  st(`Circuito gerado — ${allPts.length} pontos · ${nChunks} blocos · ${viaRua?'OSRM real':'estimativa'}`, 'g');
 }
 </script>
 </body>
