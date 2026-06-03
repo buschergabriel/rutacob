@@ -8,483 +8,364 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
   :root {
-    --amarelo: #F5C800;
-    --bg: #0A0A0A;
-    --panel: #111111;
-    --border: #2A2A2A;
-    --text: #E0E0E0;
-    --muted: #666;
-    --green: #4CAF50;
-    --orange: #F5A623;
-    --purple: #C084FC;
-    --red: #FF4444;
+    --am:#F5C800;--bg:#0A0A0A;--panel:#111;--border:#2A2A2A;
+    --text:#E0E0E0;--muted:#666;--green:#4CAF50;--orange:#F5A623;
+    --purple:#C084FC;--red:#FF4444;--blue:#4A90FF;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-
-  #header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .logo { font-size: 11px; letter-spacing: 4px; color: var(--amarelo); font-weight: bold; }
-  .subtitle { font-size: 9px; color: var(--muted); letter-spacing: 2px; }
-
-  #inputs {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 14px;
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .inp-group { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 70px; }
-  .inp-label { font-size: 8px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  input, select {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    padding: 6px 8px;
-    border-radius: 2px;
-    width: 100%;
-    outline: none;
-  }
-  input:focus, select:focus { border-color: var(--amarelo); }
-
-  /* BAIRRO SEARCH */
-  #bairro-row {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 14px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  #bairro-input {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    padding: 7px 10px;
-    border-radius: 2px;
-    outline: none;
-  }
-  #bairro-input:focus { border-color: var(--amarelo); }
-  #btn-buscar-bairro, #btn-gps {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    padding: 7px 12px;
-    border-radius: 2px;
-    cursor: pointer;
-    white-space: nowrap;
-    letter-spacing: 1px;
-    transition: all 0.15s;
-  }
-  #btn-buscar-bairro:hover, #btn-gps:hover { border-color: var(--amarelo); color: var(--amarelo); }
-  #btn-gps { font-size: 14px; padding: 6px 10px; }
-
-  #toolbar {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 14px;
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .btn {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    padding: 7px 12px;
-    border-radius: 2px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-    text-transform: uppercase;
-  }
-  .btn.active { background: #1A1500; border-color: var(--amarelo); color: var(--amarelo); }
-  .btn.primary { background: var(--amarelo); border-color: var(--amarelo); color: #000; font-weight: bold; }
-  .btn.danger { border-color: #3A1010; color: #884444; }
-  .btn.danger:hover { border-color: var(--red); color: var(--red); }
-
-  #map { flex: 1; }
-
-  #status {
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    padding: 6px 14px;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    flex-shrink: 0;
-    min-height: 28px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .dot.yellow { background: var(--amarelo); box-shadow: 0 0 6px var(--amarelo); animation: pulse 1s infinite; }
-  .dot.red { background: var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  #result-panel {
-    display: none;
-    background: var(--panel);
-    border-top: 2px solid var(--amarelo);
-    padding: 12px 14px;
-    flex-shrink: 0;
-  }
-  #result-panel.show { display: block; }
-  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .result-label { font-size: 8px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
-  .result-value { font-size: 20px; font-weight: bold; color: var(--purple); }
-  .result-value span { font-size: 10px; color: var(--muted); margin-left: 3px; }
-  .result-value.orange { color: var(--orange); }
-  .start-info { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; color: var(--muted); }
-  .start-info strong { color: var(--amarelo); }
-  .result-tag { display: inline-block; margin-top: 6px; font-size: 9px; padding: 3px 8px; border-radius: 2px; letter-spacing: 1px; }
-  .result-tag.real { background: #0A1F0A; border: 1px solid #1A4A1A; color: var(--green); }
-  .result-tag.est { background: #1A1200; border: 1px solid #3A2A00; color: var(--orange); }
-
-  /* GPS dot on map */
-  .gps-dot { width:14px; height:14px; border-radius:50%; background:#4A90FF; border:2px solid white; box-shadow:0 0 8px #4A90FF; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  #header{background:var(--bg);border-bottom:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .logo{font-size:11px;letter-spacing:4px;color:var(--am);font-weight:bold}
+  .sub{font-size:8px;color:var(--muted);letter-spacing:2px}
+  #row-inputs{background:var(--panel);border-bottom:1px solid var(--border);padding:7px 12px;display:flex;gap:7px;flex-shrink:0}
+  .ig{display:flex;flex-direction:column;gap:2px;flex:1;min-width:60px}
+  .il{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+  input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
+  input:focus{border-color:var(--am)}
+  #row-search{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:7px;align-items:center;flex-shrink:0}
+  #bairro-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
+  #bairro-input:focus{border-color:var(--am)}
+  #row-toolbar{background:var(--bg);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:7px;flex-shrink:0;overflow-x:auto}
+  .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 11px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
+  .btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
+  .btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
+  .btn.danger{border-color:#3A1010;color:#884444}
+  .btn.sm{padding:6px 9px;font-size:13px}
+  #map{flex:1}
+  #statusbar{background:var(--panel);border-top:1px solid var(--border);padding:5px 12px;font-size:10px;color:var(--muted);letter-spacing:1px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:7px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+  .dot.g{background:var(--green);box-shadow:0 0 6px var(--green)}
+  .dot.y{background:var(--am);box-shadow:0 0 6px var(--am);animation:pulse 1s infinite}
+  .dot.r{background:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  #result{display:none;background:var(--panel);border-top:2px solid var(--am);padding:11px 12px;flex-shrink:0}
+  #result.show{display:block}
+  .rg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .rl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+  .rv{font-size:20px;font-weight:bold;color:var(--purple)}
+  .rv span{font-size:10px;color:var(--muted);margin-left:3px}
+  .rv.or{color:var(--orange)}
+  .ri{margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
+  .ri strong{color:var(--am)}
+  .rtag{display:inline-block;margin-top:5px;font-size:9px;padding:3px 8px;border-radius:2px;letter-spacing:1px}
+  .rtag.real{background:#0A1F0A;border:1px solid #1A4A1A;color:var(--green)}
+  .rtag.est{background:#1A1200;border:1px solid #3A2A00;color:var(--orange)}
+  .gps-dot{width:14px;height:14px;border-radius:50%;background:#4A90FF;border:2px solid white;box-shadow:0 0 8px #4A90FF}
+  /* vértice arrastável */
+  .vertex-icon{width:12px;height:12px;border-radius:50%;background:var(--am);border:2px solid #fff;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .vertex-icon.del-mode{background:var(--red);cursor:pointer}
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div>
-    <div class="logo">AUTOVISION</div>
-    <div class="subtitle">PLANEJADOR DE ROTA</div>
-  </div>
-  <div style="font-size:9px;color:#333;letter-spacing:1px;">v2.0</div>
+  <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v2.1</div></div>
 </div>
 
-<div id="inputs">
-  <div class="inp-group">
-    <div class="inp-label">Cliente</div>
-    <input type="text" id="cliente" placeholder="CYBER" value="CYBER"/>
-  </div>
-  <div class="inp-group">
-    <div class="inp-label">Campanha</div>
-    <input type="text" id="campanha" placeholder="Junho 2026" value="Junho 2026"/>
-  </div>
-  <div class="inp-group" style="max-width:65px;">
-    <div class="inp-label">Horas</div>
-    <input type="number" id="horas" value="3" min="0.5" max="12" step="0.5"/>
-  </div>
+<div id="row-inputs">
+  <div class="ig"><div class="il">Cliente</div><input id="iCliente" value="CYBER"/></div>
+  <div class="ig"><div class="il">Campanha</div><input id="iCampanha" value="Junho 2026"/></div>
+  <div class="ig" style="max-width:60px"><div class="il">Horas</div><input id="iHoras" type="number" value="3" min="0.5" max="12" step="0.5"/></div>
 </div>
 
-<div id="bairro-row">
-  <input type="text" id="bairro-input" placeholder="🔍 Buscar bairro (ex: Rubem Berta)"/>
-  <button id="btn-buscar-bairro" onclick="buscarBairro()">BUSCAR</button>
-  <button id="btn-gps" onclick="irParaGPS()" title="Minha localização">📍</button>
+<div id="row-search">
+  <input id="bairro-input" placeholder="🔍 Buscar bairro (ex: Rubem Berta, POA)"/>
+  <button class="btn" onclick="buscarBairro()">BUSCAR</button>
+  <button class="btn sm" onclick="irGPS()" title="Minha localização">📍</button>
 </div>
 
-<div id="toolbar">
-  <button class="btn active" id="btn-perim" onclick="setMode('perim')">✏ Perímetro</button>
-  <button class="btn primary" onclick="gerar()">▶ GERAR</button>
-  <button class="btn danger" onclick="limpar()">✕ Limpar</button>
+<div id="row-toolbar">
+  <button class="btn on" id="btnAdd"  onclick="setMode('add')">✚ Adicionar</button>
+  <button class="btn"    id="btnDel"  onclick="setMode('del')">✕ Remover pt</button>
+  <button class="btn primary"         onclick="gerar()">▶ GERAR</button>
+  <button class="btn danger"          onclick="limpar()">🗑 Limpar</button>
 </div>
 
 <div id="map"></div>
 
-<div id="status">
+<div id="statusbar">
   <div class="dot" id="dot"></div>
-  <span id="status-text">Busque um bairro ou use 📍 para se localizar, depois desenhe o perímetro</span>
+  <span id="stxt">Busque um bairro ou toque no mapa para criar o perímetro</span>
 </div>
 
-<div id="result-panel">
-  <div class="result-grid">
+<div id="result">
+  <div class="rg">
     <div>
-      <div class="result-label">1 volta completa</div>
-      <div class="result-value" id="r-volta-km">—<span>km</span></div>
-      <div class="result-value" id="r-volta-t" style="font-size:16px;margin-top:2px;">—</div>
+      <div class="rl">1 volta completa</div>
+      <div class="rv" id="rVoltaKm">—<span>km</span></div>
+      <div class="rv" id="rVoltaT" style="font-size:16px;margin-top:2px">—</div>
     </div>
     <div>
-      <div class="result-label" id="r-horas-label">— h de veiculação</div>
-      <div class="result-value orange" id="r-voltas">—<span>voltas</span></div>
-      <div class="result-value orange" id="r-total-km" style="font-size:16px;margin-top:2px;">—<span>km total</span></div>
+      <div class="rl" id="rHLabel">— h de veiculação</div>
+      <div class="rv or" id="rVoltas">—<span>voltas</span></div>
+      <div class="rv or" id="rTotalKm" style="font-size:16px;margin-top:2px">—<span>km total</span></div>
     </div>
   </div>
-  <div class="start-info" id="start-info"></div>
-  <div id="r-tag"></div>
+  <div class="ri" id="rInfo"></div>
+  <div id="rTag"></div>
 </div>
 
 <script>
-const SPEED_KMH = 15;
+const SPD=15;
+const map=L.map('map',{zoomControl:true,attributionControl:false});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+map.setView([-30.0112,-51.0960],15);
 
-// Mapa com tiles normais (legíveis, com nomes de rua)
-const map = L.map('map', { zoomControl: true, attributionControl: false });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '© OSM'
-}).addTo(map);
-map.setView([-30.0112, -51.0960], 15);
+let mode='add';
+let pts=[];           // [[lat,lng],...]
+let polyLayer=null;   // L.Polygon
+let vtxMarkers=[];    // vertex drag markers
+let routeLayer=null;
+let startMkr=null;
+let gpsMkr=null;
 
-// Estado
-let mode = 'perim';
-let perimPts = [], perimLayer = null, routeLayer = null, startMarker = null, gpsMarker = null;
-let perimFechado = false;
-
-function setMode(m) {
-  mode = m;
-  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-  if (m === 'perim') document.getElementById('btn-perim').classList.add('active');
+// ── STATUS ────────────────────────────────────────────────────
+function st(msg,cls){
+  document.getElementById('stxt').textContent=msg;
+  document.getElementById('dot').className='dot'+(cls?' '+cls:'');
 }
 
-function setStatus(msg, state) {
-  document.getElementById('status-text').textContent = msg;
-  const dot = document.getElementById('dot');
-  dot.className = 'dot' + (state ? ' ' + state : '');
+// ── MODE ──────────────────────────────────────────────────────
+function setMode(m){
+  mode=m;
+  ['btnAdd','btnDel'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById(m==='add'?'btnAdd':'btnDel').classList.add('on');
+  // toggle vertex marker style
+  vtxMarkers.forEach(mkr=>{
+    const el=mkr.getElement();
+    if(el) el.querySelector('div').className='vertex-icon'+(m==='del'?' del-mode':'');
+  });
+  st(m==='add'?'Toque no mapa para adicionar pontos ao perímetro':'Toque num ponto amarelo para removê-lo','');
 }
 
-// ── GPS ──────────────────────────────────────────────────────
-function irParaGPS() {
-  if (!navigator.geolocation) { setStatus('GPS não disponível neste dispositivo', 'red'); return; }
-  setStatus('Obtendo localização...', 'yellow');
-  navigator.geolocation.getCurrentPosition(pos => {
-    const {latitude: lat, longitude: lng} = pos.coords;
-    map.setView([lat, lng], 16);
-    if (gpsMarker) map.removeLayer(gpsMarker);
-    gpsMarker = L.marker([lat, lng], {
-      icon: L.divIcon({ className: '', html: '<div class="gps-dot"></div>', iconSize:[14,14], iconAnchor:[7,7] })
-    }).addTo(map).bindPopup('📍 Você está aqui').openPopup();
-    setStatus('Localização encontrada — agora desenhe o perímetro', 'green');
-  }, err => {
-    setStatus('Não foi possível obter GPS — verifique as permissões', 'red');
-  }, { enableHighAccuracy: true, timeout: 10000 });
+// ── DRAW ──────────────────────────────────────────────────────
+function redraw(){
+  // Polígono
+  if(polyLayer)map.removeLayer(polyLayer);
+  if(pts.length>=3){
+    polyLayer=L.polygon(pts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(map);
+  } else if(pts.length>=2){
+    polyLayer=L.polyline(pts,{color:'#F5C800',weight:2,dashArray:'6,4'}).addTo(map);
+  }
+  // Vértices
+  vtxMarkers.forEach(m=>map.removeLayer(m));
+  vtxMarkers=[];
+  pts.forEach((pt,i)=>{
+    const isDel=(mode==='del');
+    const mkr=L.marker(pt,{
+      draggable: !isDel,
+      icon: L.divIcon({
+        className:'',
+        html:`<div class="vertex-icon${isDel?' del-mode':''}"></div>`,
+        iconSize:[12,12],iconAnchor:[6,6]
+      })
+    }).addTo(map);
+    // Drag to move
+    mkr.on('dragend',()=>{
+      pts[i]=[mkr.getLatLng().lat, mkr.getLatLng().lng];
+      redraw();
+    });
+    // Click to delete (in del mode)
+    mkr.on('click',e=>{
+      if(mode==='del'){
+        L.DomEvent.stopPropagation(e);
+        pts.splice(i,1);
+        redraw();
+        st(`Ponto removido — ${pts.length} pontos restantes`,'');
+      }
+    });
+    vtxMarkers.push(mkr);
+  });
 }
 
-// ── BUSCA DE BAIRRO (Nominatim) ───────────────────────────────
-async function buscarBairro() {
-  const query = document.getElementById('bairro-input').value.trim();
-  if (!query) return;
-  setStatus('Buscando ' + query + '...', 'yellow');
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Porto Alegre, RS, Brasil')}&format=json&polygon_geojson=1&limit=1`,
-      { headers: { 'Accept-Language': 'pt-BR' } }
+// ── MAP CLICK: add point ──────────────────────────────────────
+map.on('click',e=>{
+  if(mode!=='add')return;
+  pts.push([e.latlng.lat,e.latlng.lng]);
+  redraw();
+  st(`${pts.length} ponto${pts.length>1?'s':''} — continue adicionando ou clique ▶ GERAR`,'');
+});
+
+// ── GPS ───────────────────────────────────────────────────────
+function irGPS(){
+  if(!navigator.geolocation){st('GPS indisponível','r');return;}
+  st('Obtendo localização...','y');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const{latitude:lat,longitude:lng}=pos.coords;
+    map.setView([lat,lng],16);
+    if(gpsMkr)map.removeLayer(gpsMkr);
+    gpsMkr=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="gps-dot"></div>',iconSize:[14,14],iconAnchor:[7,7]})})
+      .addTo(map).bindPopup('📍 Você está aqui').openPopup();
+    st('Localização encontrada','g');
+  },()=>st('Não foi possível obter GPS — verifique permissões','r'),{enableHighAccuracy:true,timeout:10000});
+}
+
+// ── BUSCA BAIRRO ──────────────────────────────────────────────
+async function buscarBairro(){
+  const q=document.getElementById('bairro-input').value.trim();
+  if(!q)return;
+  st('Buscando '+q+'...','y');
+  try{
+    const res=await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Porto Alegre, RS, Brasil')}&format=json&polygon_geojson=1&limit=3`,
+      {headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/1.0'}}
     );
-    const data = await res.json();
-    if (!data.length) { setStatus('Bairro não encontrado — tente outro nome', 'red'); return; }
+    const data=await res.json();
+    // Prefere resultado com tipo suburb/neighbourhood
+    const item=data.find(d=>['suburb','neighbourhood','quarter'].includes(d.type))||data[0];
+    if(!item){st('Bairro não encontrado','r');return;}
 
-    const item = data[0];
-    const bb = item.boundingbox; // [minlat, maxlat, minlon, maxlon]
-    map.fitBounds([[+bb[0],+bb[2]], [+bb[1],+bb[3]]], { padding: [20,20] });
+    const bb=item.boundingbox;
+    map.fitBounds([[+bb[0],+bb[2]],[+bb[1],+bb[3]]],{padding:[20,20]});
 
-    // Se tem polígono, sugere perímetro automático
-    if (item.geojson && (item.geojson.type === 'Polygon' || item.geojson.type === 'MultiPolygon')) {
-      let coords = item.geojson.type === 'Polygon'
-        ? item.geojson.coordinates[0]
-        : item.geojson.coordinates[0][0];
-      // Simplifica: pega 1 a cada N pontos (máx 30 pontos)
-      const step = Math.max(1, Math.floor(coords.length / 24));
-      const simplified = coords.filter((_,i) => i % step === 0).map(c => [c[1], c[0]]);
-      perimPts = simplified;
-      perimFechado = true;
-      drawPerimFechado();
-      setStatus(`"${item.display_name.split(',')[0]}" — perímetro sugerido. Ajuste tocando ou clique GERAR.`, 'green');
+    if(item.geojson&&(item.geojson.type==='Polygon'||item.geojson.type==='MultiPolygon')){
+      let coords=item.geojson.type==='Polygon'
+        ?item.geojson.coordinates[0]
+        :item.geojson.coordinates[0][0];
+      // Simplifica mantendo 20-28 vértices representativos
+      const want=Math.min(28,Math.max(16,Math.floor(coords.length/4)));
+      const step=Math.max(1,Math.floor(coords.length/want));
+      pts=coords.filter((_,i)=>i%step===0).map(c=>[c[1],c[0]]);
+      // Remove último se igual ao primeiro (polígono fechado no GeoJSON)
+      if(pts.length>1){
+        const[f,l]=[pts[0],pts[pts.length-1]];
+        if(Math.abs(f[0]-l[0])<0.00001&&Math.abs(f[1]-l[1])<0.00001)pts.pop();
+      }
+      redraw();
+      const nome=item.display_name.split(',')[0];
+      st(`"${nome}" — arraste os pontos amarelos para ajustar, depois ▶ GERAR`,'g');
     } else {
-      setStatus(`"${item.display_name.split(',')[0]}" encontrado — agora desenhe o perímetro`, 'green');
+      st(`"${item.display_name.split(',')[0]}" encontrado — desenhe o perímetro manualmente`,'g');
     }
-  } catch(e) {
-    setStatus('Erro na busca — verifique a conexão', 'red');
+  }catch(e){
+    st('Erro na busca — verifique a conexão','r');
   }
 }
+document.getElementById('bairro-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
 
-// Enter no campo de bairro
-document.getElementById('bairro-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') buscarBairro();
-});
-
-// ── PERÍMETRO ─────────────────────────────────────────────────
-map.on('click', e => {
-  if (perimFechado) return; // já fechado, não adiciona mais pontos
-  if (mode !== 'perim') return;
-  const {lat, lng} = e.latlng;
-  perimPts.push([lat, lng]);
-  drawPerimAberto();
-
-  if (perimPts.length === 1) {
-    setStatus('Continue tocando para definir o perímetro. Feche tocando perto do 1º ponto.', '');
-  } else {
-    setStatus(`${perimPts.length} pontos. Continue ou toque perto do início para fechar.`, '');
-  }
-
-  // Auto-fecha se perto do início
-  if (perimPts.length > 3) {
-    const [la, lo] = perimPts[0];
-    const dist = Math.hypot(lat-la, lng-lo) * 111320;
-    if (dist < 80) { perimPts.pop(); fecharPerim(); }
-  }
-});
-
-function drawPerimAberto() {
-  if (perimLayer) map.removeLayer(perimLayer);
-  if (perimPts.length === 1) {
-    perimLayer = L.circleMarker(perimPts[0], {radius:5,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1}).addTo(map);
-  } else {
-    perimLayer = L.polyline([...perimPts, perimPts[0]], {color:'#F5C800',weight:2,dashArray:'6,4',opacity:0.9}).addTo(map);
-  }
-}
-
-function drawPerimFechado() {
-  if (perimLayer) map.removeLayer(perimLayer);
-  perimLayer = L.polygon(perimPts, {color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.08}).addTo(map);
-}
-
-function fecharPerim() {
-  perimFechado = true;
-  drawPerimFechado();
-  setStatus(`Perímetro fechado — ${perimPts.length} pontos. Clique ▶ GERAR.`, 'green');
-  setMode(null);
-}
-
-function limpar() {
-  perimPts = []; perimFechado = false;
-  [perimLayer, routeLayer, startMarker].forEach(l => { if(l) map.removeLayer(l); });
-  perimLayer = routeLayer = startMarker = null;
-  document.getElementById('result-panel').classList.remove('show');
-  setStatus('Busque um bairro ou use 📍 para se localizar, depois desenhe o perímetro', '');
-  setMode('perim');
+// ── LIMPAR ────────────────────────────────────────────────────
+function limpar(){
+  pts=[];
+  [polyLayer,routeLayer,startMkr].forEach(l=>{if(l)map.removeLayer(l);});
+  vtxMarkers.forEach(m=>map.removeLayer(m));
+  polyLayer=routeLayer=startMkr=null; vtxMarkers=[];
+  document.getElementById('result').classList.remove('show');
+  st('Limpo — busque um bairro ou toque no mapa','');
+  setMode('add');
 }
 
 // ── GEOMETRIA ─────────────────────────────────────────────────
-function scanLine(poly, lat) {
-  const xs = [];
-  for (let i=0; i<poly.length; i++) {
-    const [la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
-    if ((la<=lat&&lat<lb)||(lb<=lat&&lat<la))
-      xs.push(lo+(lat-la)/(lb-la)*(lp-lo));
+function scanLine(poly,lat){
+  const xs=[];
+  for(let i=0;i<poly.length;i++){
+    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
+    if((la<=lat&&lat<lb)||(lb<=lat&&lat<la))xs.push(lo+(lat-la)/(lb-la)*(lp-lo));
   }
   return xs.sort((a,b)=>a-b);
 }
-
-function coverageAnchors(poly, spacingM) {
+function coverageAnchors(poly,spcM){
   const lats=poly.map(p=>p[0]);
-  const [lo,hi]=[Math.min(...lats),Math.max(...lats)];
-  const step=spacingM/111320;
-  const pts=[];
-  for (let lat=lo+step*0.5; lat<=hi; lat+=step) {
+  const[lo,hi]=[Math.min(...lats),Math.max(...lats)];
+  const step=spcM/111320;
+  const pts2=[];
+  for(let lat=lo+step*.5;lat<=hi;lat+=step){
     const xs=scanLine(poly,lat);
-    for (let i=0;i<xs.length-1;i+=2)
-      pts.push([lat,(xs[i]+xs[i+1])/2]);
+    for(let i=0;i<xs.length-1;i+=2)pts2.push([lat,(xs[i]+xs[i+1])/2]);
   }
-  return pts;
+  return pts2;
 }
-
-function bestStartPoint(poly) {
-  const pts=[];
-  for (let i=0;i<poly.length;i++) {
-    const [la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
-    for (let t=0;t<=1;t+=0.2) pts.push([la+(lb-la)*t,lo+(lp-lo)*t]);
+function bestStart(poly){
+  const samp=[];
+  for(let i=0;i<poly.length;i++){
+    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
+    for(let t=0;t<=1;t+=.15)samp.push([la+(lb-la)*t,lo+(lp-lo)*t]);
   }
   const lats=poly.map(p=>p[0]),lons=poly.map(p=>p[1]);
   const corners=[[Math.min(...lats),Math.min(...lons)],[Math.min(...lats),Math.max(...lons)],
                  [Math.max(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
-  let best=pts[0],bestScore=Infinity;
-  for (const pt of pts) {
-    const score=Math.min(...corners.map(c=>Math.hypot(pt[0]-c[0],pt[1]-c[1])));
-    if(score<bestScore){bestScore=score;best=pt;}
+  let best=samp[0],bscore=Infinity;
+  for(const p of samp){
+    const s=Math.min(...corners.map(c=>Math.hypot(p[0]-c[0],p[1]-c[1])));
+    if(s<bscore){bscore=s;best=p;}
   }
   return best;
 }
-
-function haversine(a,b) {
+function haversine(a,b){
   const R=6371000,dLat=(b[0]-a[0])*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180;
   const s=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(s));
 }
-
-function downsample(pts,max) {
-  if(pts.length<=max)return pts;
-  const res=[],step=(pts.length-1)/(max-1);
-  for(let i=0;i<max;i++)res.push(pts[Math.round(i*step)]);
-  return res;
+function downsample(pts2,max){
+  if(pts2.length<=max)return pts2;
+  const r=[],step=(pts2.length-1)/(max-1);
+  for(let i=0;i<max;i++)r.push(pts2[Math.round(i*step)]);
+  return r;
 }
-
-function fmtT(h) {
+function fmtT(h){
   const hh=Math.floor(h),mm=Math.round((h-hh)*60);
   if(mm===60)return`${hh+1}h00`;
   return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;
 }
 
-// ── OSRM ─────────────────────────────────────────────────────
-async function osrmTrip(pts) {
-  const safe=downsample(pts,90);
+// ── OSRM /trip ────────────────────────────────────────────────
+async function osrmTrip(pts2){
+  const safe=downsample(pts2,90);
   const coords=safe.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
-  const radii=safe.map(()=>'300').join(';');
+  const radii=safe.map(()=>'200').join(';');
   const url=`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson&radiuses=${radii}`;
-  const res=await fetch(url,{signal:AbortSignal.timeout(25000)});
-  if(!res.ok)throw new Error('OSRM '+res.status);
-  const data=await res.json();
-  if(data.code!=='Ok')throw new Error(data.code);
-  return{distM:data.trips[0].distance,geom:data.trips[0].geometry.coordinates.map(c=>[c[1],c[0]])};
+  const r=await fetch(url,{signal:AbortSignal.timeout(25000)});
+  if(!r.ok)throw new Error('OSRM '+r.status);
+  const d=await r.json();
+  if(d.code!=='Ok')throw new Error(d.code);
+  return{distM:d.trips[0].distance,geom:d.trips[0].geometry.coordinates.map(c=>[c[1],c[0]])};
 }
 
 // ── GERAR ─────────────────────────────────────────────────────
-async function gerar() {
-  if (perimPts.length < 3) { setStatus('Desenhe o perímetro primeiro', 'red'); return; }
-  if (!perimFechado) fecharPerim();
+async function gerar(){
+  if(pts.length<3){st('Adicione pelo menos 3 pontos ao perímetro','r');return;}
+  const horas=parseFloat(document.getElementById('iHoras').value)||3;
+  const cliente=document.getElementById('iCliente').value||'—';
+  const campanha=document.getElementById('iCampanha').value||'—';
 
-  const horas=parseFloat(document.getElementById('horas').value)||3;
-  const cliente=document.getElementById('cliente').value||'—';
-  const campanha=document.getElementById('campanha').value||'—';
+  st('Calculando pontos de cobertura...','y');
+  // Espaçamento 80m para cobertura densa
+  const anchors=coverageAnchors(pts,80);
+  if(anchors.length<3){st('Área muito pequena — amplie o perímetro','r');return;}
 
-  setStatus('Calculando ponto de início ótimo...','yellow');
-  const anchors=coverageAnchors(perimPts,150);
-  if(anchors.length<2){setStatus('Área muito pequena','red');return;}
-
-  const startPt=bestStartPoint(perimPts);
-  if(startMarker)map.removeLayer(startMarker);
-  startMarker=L.circleMarker(startPt,{radius:9,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2})
+  const startPt=bestStart(pts);
+  if(startMkr)map.removeLayer(startMkr);
+  startMkr=L.circleMarker(startPt,{radius:9,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2})
     .addTo(map).bindPopup('<b>▶ PONTO DE INÍCIO</b>').openPopup();
 
-  setStatus('Calculando rota via ruas reais...','yellow');
+  st(`Calculando rota — ${anchors.length} pontos de cobertura via OSRM...`,'y');
+
   let distM,geom,viaRua=true;
-  try {
+  try{
     const r=await osrmTrip([startPt,...anchors]);
     distM=r.distM; geom=r.geom;
-  } catch(e) {
+  }catch(e){
     viaRua=false;
-    const pts=[startPt,...anchors,startPt];
-    distM=0; for(let i=0;i<pts.length-1;i++) distM+=haversine(pts[i],pts[i+1]);
-    geom=pts;
+    const allPts=[startPt,...anchors,startPt];
+    distM=0; for(let i=0;i<allPts.length-1;i++)distM+=haversine(allPts[i],allPts[i+1]);
+    geom=allPts;
   }
 
   if(routeLayer)map.removeLayer(routeLayer);
-  routeLayer=L.polyline(geom,{color:viaRua?'#C084FC':'#F5A623',weight:3,opacity:0.85}).addTo(map);
+  routeLayer=L.polyline(geom,{color:viaRua?'#C084FC':'#F5A623',weight:3,opacity:.85}).addTo(map);
 
   const voltaKm=distM/1000;
-  const voltaHr=voltaKm/SPEED_KMH;
+  const voltaHr=voltaKm/SPD;
   const voltas=Math.floor(horas/voltaHr);
 
-  document.getElementById('r-volta-km').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
-  document.getElementById('r-volta-t').innerHTML=fmtT(voltaHr);
-  document.getElementById('r-horas-label').textContent=`${horas}h de veiculação`;
-  document.getElementById('r-voltas').innerHTML=`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
-  document.getElementById('r-total-km').innerHTML=`${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
-  document.getElementById('start-info').innerHTML=`<strong>▶ INÍCIO:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}`;
-  document.getElementById('r-tag').innerHTML=`<span class="result-tag ${viaRua?'real':'est'}">${viaRua?'🛣 VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`;
-  document.getElementById('result-panel').classList.add('show');
-  setStatus(`Rota gerada — ${anchors.length} pontos · ${viaRua?'OSRM real':'estimativa'}`, 'green');
+  document.getElementById('rVoltaKm').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
+  document.getElementById('rVoltaT').innerHTML=fmtT(voltaHr);
+  document.getElementById('rHLabel').textContent=`${horas}h de veiculação`;
+  document.getElementById('rVoltas').innerHTML=`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
+  document.getElementById('rTotalKm').innerHTML=`${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
+  document.getElementById('rInfo').innerHTML=`<strong>▶ INÍCIO:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}`;
+  document.getElementById('rTag').innerHTML=`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`;
+  document.getElementById('result').classList.add('show');
+  st(`Rota gerada — ${anchors.length} pontos · ${viaRua?'OSRM real':'estimativa'}`,'g');
 }
 </script>
 </body>
