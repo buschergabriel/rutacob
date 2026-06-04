@@ -7,15 +7,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-:root{
-  --am:#F5C800;--bg:#0A0A0A;--panel:#111;--panel2:#161616;
-  --border:#2A2A2A;--text:#E0E0E0;--muted:#555;
-  --green:#4CAF50;--orange:#F5A623;--purple:#C084FC;--red:#FF4444;--cyan:#00CCCC;
-}
+:root{--am:#F5C800;--bg:#0A0A0A;--panel:#111;--panel2:#161616;--border:#2A2A2A;--text:#E0E0E0;--muted:#555;--green:#4CAF50;--orange:#F5A623;--purple:#C084FC;--red:#FF4444;--cyan:#00CCCC}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-/* HEADER */
 #hdr{background:var(--bg);border-bottom:1px solid var(--border);padding:7px 12px;flex-shrink:0}
 #hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .logo{font-size:11px;letter-spacing:4px;color:var(--am);font-weight:bold}
@@ -23,51 +18,48 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
 #hdr-fields{display:flex;gap:7px}
 .ig{display:flex;flex-direction:column;gap:2px;flex:1;min-width:55px}
 .il{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-input[type=text],input[type=number]{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
+input{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
 input:focus{border-color:var(--am)}
 
-/* TABS */
 #tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:9px 0;text-align:center;font-size:10px;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase}
 .tab.active{color:var(--am);border-bottom-color:var(--am);background:#0F0E00}
 
-/* TAB PANELS */
 #tab-bairro,#tab-circuito{display:none;flex-direction:column;flex:1;overflow:hidden}
 #tab-bairro.show,#tab-circuito.show{display:flex}
 
-/* TOOLBAR ROWS */
 .trow{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;align-items:center;flex-shrink:0;overflow-x:auto}
-.trow-label{font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap}
 
-/* SEARCH ROW */
 #search-row{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;flex-shrink:0}
-#bairro-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
-#bairro-input:focus{border-color:var(--am)}
-#cidade-input{width:110px;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:11px;padding:6px 7px;border-radius:2px;outline:none}
-#cidade-input:focus{border-color:var(--am)}
+#bairro-input,#cidade-input{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
+#bairro-input{flex:1}
+#bairro-input:focus,#cidade-input:focus{border-color:var(--am)}
+#cidade-input{width:120px}
 
-/* CONFIRM BANNER */
 #confirm-banner{display:none;background:#1A1500;border-bottom:1px solid #3A2A00;padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
 #confirm-banner.show{display:flex}
 #confirm-name{font-size:11px;color:var(--am);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* BUTTONS */
+/* PRONTO BANNER */
+#pronto-banner{display:none;background:#0A1A00;border-bottom:1px solid var(--green);padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
+#pronto-banner.show{display:flex}
+#pronto-info{font-size:11px;color:var(--green);flex:1}
+
 .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
 .btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
 .btn.on-move{background:#001A1A;border-color:var(--cyan);color:var(--cyan)}
 .btn.on-del{background:#1A0000;border-color:var(--red);color:var(--red)}
 .btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
+.btn.green{background:#0A2A00;border-color:var(--green);color:var(--green);font-weight:bold}
 .btn.confirm{background:#1A3A00;border-color:var(--green);color:var(--green)}
 .btn.cancel{background:#1A0000;border-color:var(--red);color:var(--red)}
 .btn.danger{border-color:#3A1010;color:#884444}
 .btn.sm{padding:5px 8px;font-size:13px}
-.btn.full{width:100%;font-size:11px}
+.btn.full{width:100%;font-size:11px;padding:9px}
 
-/* MAP */
-.map-wrap{flex:1;position:relative}
-.map-wrap .leaflet-container{height:100%;width:100%}
+.map-wrap{flex:1;position:relative;overflow:hidden}
+#map-bairro,#map-circuito{height:100%;width:100%}
 
-/* STATUS */
 .statusbar{background:var(--panel);border-top:1px solid var(--border);padding:5px 10px;font-size:10px;color:var(--muted);letter-spacing:1px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:6px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .dot.g{background:var(--green);box-shadow:0 0 5px var(--green)}
@@ -75,70 +67,57 @@ input:focus{border-color:var(--am)}
 .dot.r{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* RESULT PANEL */
-#result{display:none;background:var(--panel);border-top:2px solid var(--am);padding:10px 12px;flex-shrink:0}
+/* RESULT — big and clean */
+#result{display:none;background:var(--panel);border-top:2px solid var(--am);padding:12px;flex-shrink:0}
 #result.show{display:block}
-.rg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.rg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border)}
-.rl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
-.rv{font-size:19px;font-weight:bold;color:var(--purple)}
+.result-main{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.rl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+.rv{font-size:22px;font-weight:bold;color:var(--purple)}
 .rv span{font-size:10px;color:var(--muted);margin-left:2px}
 .rv.or{color:var(--orange)}
-.rv.bl{color:#4A90FF;font-size:14px}
-.rinfo{margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
-.rinfo strong{color:var(--am)}
-.rtag{display:inline-block;margin-top:5px;font-size:9px;padding:2px 7px;border-radius:2px;letter-spacing:1px}
+.verdict{background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px}
+.verdict strong{color:var(--am)}
+.rtag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:2px;letter-spacing:1px}
 .rtag.real{background:#0A1F0A;border:1px solid #1A4A1A;color:var(--green)}
 .rtag.est{background:#1A1200;border:1px solid #3A2A00;color:var(--orange)}
 
-/* VERTEX MARKERS */
+#export-row{display:none;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);flex-shrink:0}
+#export-row.show{display:block}
+
 .vx{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .vx.am{background:var(--am)}
 .vx.cy{background:var(--cyan);cursor:grab}
 .vx.rd{background:var(--red);cursor:pointer}
-.vx.pu{background:var(--purple)}
-.vx.pu.cy{background:var(--cyan);cursor:grab}
-.vx.pu.rd{background:var(--red);cursor:pointer}
-
-/* AREA BADGE */
-#area-badge{font-size:9px;color:var(--muted);letter-spacing:1px}
-
-/* GPS DOT */
 .gps-dot{width:13px;height:13px;border-radius:50%;background:#4A90FF;border:2px solid #fff;box-shadow:0 0 7px #4A90FF}
-
-/* EXPORT ROW */
-#export-row{display:none;background:var(--bg);border-top:1px solid var(--border);padding:7px 12px;flex-shrink:0}
-#export-row.show{display:block}
+#area-badge{font-size:9px;color:var(--muted);letter-spacing:1px}
 </style>
 </head>
 <body>
 
-<!-- FIXED HEADER -->
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.0</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.1</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
     </div>
   </div>
   <div id="hdr-fields">
-    <div class="ig"><div class="il">Cliente</div><input type="text" id="iCliente" value="CYBER"/></div>
-    <div class="ig"><div class="il">Campanha</div><input type="text" id="iCampanha" value="Junho 2026"/></div>
+    <div class="ig"><div class="il">Cliente</div><input type="text" id="iCliente" placeholder="Cliente"/></div>
+    <div class="ig"><div class="il">Campanha</div><input type="text" id="iCampanha" placeholder="Campanha"/></div>
     <div class="ig" style="max-width:58px"><div class="il">Horas</div><input type="number" id="iHoras" value="3" min="0.5" max="12" step="0.5"/></div>
   </div>
 </div>
 
-<!-- TABS -->
 <div id="tabs">
-  <div class="tab active" id="tab-btn-bairro" onclick="showTab('bairro')">▣ BAIRRO</div>
+  <div class="tab active" id="tab-btn-bairro"   onclick="showTab('bairro')">▣ BAIRRO</div>
   <div class="tab"        id="tab-btn-circuito" onclick="showTab('circuito')">⟳ CIRCUITO</div>
 </div>
 
-<!-- TAB: BAIRRO -->
+<!-- ABA BAIRRO -->
 <div id="tab-bairro" class="show">
   <div id="search-row">
-    <input id="bairro-input" placeholder="Nome do bairro" value="Rubem Berta"/>
+    <input id="bairro-input" placeholder="Nome do bairro"/>
     <input id="cidade-input" placeholder="Cidade, UF" value="Porto Alegre, RS"/>
     <button class="btn" onclick="buscarBairro()">BUSCAR</button>
   </div>
@@ -153,11 +132,14 @@ input:focus{border-color:var(--am)}
     <button class="btn on" id="bBtnAdd"  onclick="setBMode('add')">✚ Adicionar</button>
     <button class="btn"    id="bBtnMove" onclick="setBMode('move')">✎ Mover</button>
     <button class="btn"    id="bBtnDel"  onclick="setBMode('del')">✕ Remover</button>
-    <button class="btn danger" onclick="limparBairro()">🗑</button>
+    <button class="btn danger"           onclick="limparBairro()">🗑</button>
   </div>
 
-  <div class="map-wrap">
-    <div id="map-bairro"></div>
+  <div class="map-wrap"><div id="map-bairro"></div></div>
+
+  <div id="pronto-banner">
+    <div id="pronto-info"></div>
+    <button class="btn green" onclick="irParaCircuito()">▶ GERAR CIRCUITO</button>
   </div>
 
   <div class="statusbar">
@@ -166,86 +148,68 @@ input:focus{border-color:var(--am)}
   </div>
 </div>
 
-<!-- TAB: CIRCUITO -->
+<!-- ABA CIRCUITO -->
 <div id="tab-circuito">
   <div class="trow">
-    <div class="trow-label">DENSIDADE</div>
-    <button class="btn on" id="d1" onclick="setDensity(1)">🔵 Principal</button>
-    <button class="btn"    id="d2" onclick="setDensity(2)">🟡 Equilibrado</button>
-    <button class="btn"    id="d3" onclick="setDensity(3)">🔴 Total</button>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap">DENSIDADE</div>
+    <button class="btn on" id="d1" onclick="setDensity(1)">🔵 Leve</button>
+    <button class="btn"    id="d2" onclick="setDensity(2)">🟡 Médio</button>
+    <button class="btn"    id="d3" onclick="setDensity(3)">🔴 Denso</button>
+    <button class="btn primary" style="margin-left:auto" onclick="gerar()">▶ GERAR</button>
+    <button class="btn danger"  onclick="limparCircuito()">🗑</button>
   </div>
 
-  <div class="trow">
-    <button class="btn on"  id="cBtnAdd"  onclick="setCMode('add')">✚ Adicionar</button>
-    <button class="btn"     id="cBtnMove" onclick="setCMode('move')">✎ Mover</button>
-    <button class="btn"     id="cBtnDel"  onclick="setCMode('del')">✕ Remover</button>
-    <button class="btn primary"           onclick="gerar()">▶ GERAR</button>
-    <button class="btn danger"            onclick="limparCircuito()">🗑</button>
-  </div>
-
-  <div class="map-wrap">
-    <div id="map-circuito"></div>
-  </div>
+  <div class="map-wrap"><div id="map-circuito"></div></div>
 
   <div class="statusbar">
     <div class="dot" id="cDot"></div>
-    <span id="cSt">Defina o bairro na aba BAIRRO e clique ▶ GERAR</span>
+    <span id="cSt">Defina o bairro e clique ▶ GERAR</span>
   </div>
 
   <div id="result">
-    <div class="rg">
+    <div class="result-main">
       <div>
         <div class="rl">1 volta completa</div>
-        <div class="rv" id="rVoltaKm">—<span>km</span></div>
-        <div class="rv" id="rVoltaT" style="font-size:15px;margin-top:2px">—</div>
+        <div class="rv" id="rKm">—<span>km</span></div>
+        <div class="rv" id="rT" style="font-size:16px;margin-top:2px">—</div>
       </div>
       <div>
-        <div class="rl" id="rHLabel">— h de veiculação</div>
+        <div class="rl" id="rHLabel">— h disponíveis</div>
         <div class="rv or" id="rVoltas">—<span>voltas</span></div>
-        <div class="rv or" id="rTotalKm" style="font-size:15px;margin-top:2px">—<span>km total</span></div>
+        <div class="rv or" id="rTotalKm" style="font-size:16px;margin-top:2px">—<span>km cobertos</span></div>
       </div>
     </div>
-    <div class="rg3">
-      <div><div class="rl">Área</div><div class="rv bl" id="rArea">—<span>km²</span></div></div>
-      <div><div class="rl">Pts rota</div><div class="rv bl" id="rPts">—</div></div>
-      <div><div class="rl">km/km²</div><div class="rv bl" id="rDens">—<span>×</span></div></div>
-    </div>
-    <div class="rinfo" id="rInfo"></div>
+    <div class="verdict" id="rVerdict"></div>
     <div id="rTag"></div>
   </div>
 
   <div id="export-row">
-    <button class="btn primary full" onclick="exportGPX()">⬇ EXPORTAR GPX — STRAVA</button>
+    <button class="btn full primary" onclick="exportGPX()">⬇ EXPORTAR GPX — STRAVA</button>
   </div>
 </div>
 
 <script>
 const SPD = 15;
 
-// ── MAPS ──────────────────────────────────────────────────────
-const mapB = L.map('map-bairro',  {zoomControl:true,  attributionControl:false});
-const mapC = L.map('map-circuito',{zoomControl:true,  attributionControl:false});
-const TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const mapB = L.map('map-bairro',  {zoomControl:true, attributionControl:false});
+const mapC = L.map('map-circuito',{zoomControl:true, attributionControl:false});
+const TILES='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapB);
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapC);
-mapB.setView([-30.0112,-51.0960],14);
-mapC.setView([-30.0112,-51.0960],14);
+mapB.setView([-30.05,-51.17],13);
+mapC.setView([-30.05,-51.17],13);
 
-// ── STATE ─────────────────────────────────────────────────────
-let bPts=[], bMode='add', bPolyLayer=null, bVtx=[], gpsMkr=null;
-let pendingGeojson=null, pendingName='';
-let cPts=[], cMode='add', cRouteLayer=null, cVtx=[], cStartMkr=null;
-let densityM=150;
-let lastGeom=null; // for GPX export
+let bPts=[],bMode='add',bPolyLayer=null,bVtx=[],gpsMkr=null;
+let pendingGeojson=null,pendingName='';
+let lastGeom=null;
 
 // ── TABS ──────────────────────────────────────────────────────
-function showTab(t) {
+function showTab(t){
   ['bairro','circuito'].forEach(n=>{
-    document.getElementById('tab-'+n).classList.toggle('show', n===t);
-    document.getElementById('tab-btn-'+n).classList.toggle('active', n===t);
+    document.getElementById('tab-'+n).classList.toggle('show',n===t);
+    document.getElementById('tab-btn-'+n).classList.toggle('active',n===t);
   });
-  if(t==='bairro') setTimeout(()=>mapB.invalidateSize(),50);
-  else             setTimeout(()=>mapC.invalidateSize(),50);
+  setTimeout(()=>(t==='bairro'?mapB:mapC).invalidateSize(),60);
 }
 
 // ── STATUS ────────────────────────────────────────────────────
@@ -264,9 +228,22 @@ function polyAreaKm2(poly){
   }
   return Math.abs(area/2)/1e6;
 }
+
 function updateAreaBadge(){
   const a=bPts.length>=3?polyAreaKm2(bPts):0;
   document.getElementById('area-badge').textContent=a>0?`▣ ${a.toFixed(2)} km²`:'';
+  // Mostra/esconde botão pronto
+  if(a>0){
+    document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² definidos`;
+    document.getElementById('pronto-banner').classList.add('show');
+  } else {
+    document.getElementById('pronto-banner').classList.remove('show');
+  }
+}
+
+function irParaCircuito(){
+  showTab('circuito');
+  gerar();
 }
 
 // ── GPS ───────────────────────────────────────────────────────
@@ -275,35 +252,33 @@ function irGPS(){
   bSt('Obtendo localização...','y');
   navigator.geolocation.getCurrentPosition(pos=>{
     const{latitude:lat,longitude:lng}=pos.coords;
-    mapB.setView([lat,lng],16); mapC.setView([lat,lng],16);
-    if(gpsMkr){mapB.removeLayer(gpsMkr);}
+    mapB.setView([lat,lng],15);mapC.setView([lat,lng],15);
+    if(gpsMkr)mapB.removeLayer(gpsMkr);
     gpsMkr=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="gps-dot"></div>',iconSize:[13,13],iconAnchor:[6,6]})}).addTo(mapB).bindPopup('📍 Você está aqui').openPopup();
     bSt('Localização encontrada','g');
-  },()=>bSt('GPS indisponível — verifique permissões','r'),{enableHighAccuracy:true,timeout:10000});
+  },()=>bSt('GPS indisponível','r'),{enableHighAccuracy:true,timeout:10000});
 }
 
-// ── BAIRRO MODE ───────────────────────────────────────────────
+// ── BAIRRO ────────────────────────────────────────────────────
 function setBMode(m){
   bMode=m;
   ['bBtnAdd','bBtnMove','bBtnDel'].forEach(id=>document.getElementById(id).className='btn');
-  const map={'add':'bBtnAdd','move':'bBtnMove','del':'bBtnDel'};
-  const cls={'add':'on','move':'on-move','del':'on-del'};
-  document.getElementById(map[m]).className='btn '+cls[m];
+  document.getElementById({add:'bBtnAdd',move:'bBtnMove',del:'bBtnDel'}[m]).className='btn '+{add:'on',move:'on-move',del:'on-del'}[m];
   bRedraw();
-  bSt(m==='add'?'Toque no mapa para adicionar pontos':m==='move'?'Arraste um ponto para movê-lo':'Toque num ponto para removê-lo','');
+  bSt({add:'Toque no mapa para adicionar pontos',move:'Arraste um ponto para movê-lo',del:'Toque num ponto para removê-lo'}[m],'');
 }
 
 function bRedraw(){
   if(bPolyLayer)mapB.removeLayer(bPolyLayer);
-  if(bPts.length>=3) bPolyLayer=L.polygon(bPts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(mapB);
-  else if(bPts.length>=2) bPolyLayer=L.polyline(bPts,{color:'#F5C800',weight:2,dashArray:'5,4'}).addTo(mapB);
+  if(bPts.length>=3)bPolyLayer=L.polygon(bPts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(mapB);
+  else if(bPts.length>=2)bPolyLayer=L.polyline(bPts,{color:'#F5C800',weight:2,dashArray:'5,4'}).addTo(mapB);
   else bPolyLayer=null;
-  bVtx.forEach(m=>mapB.removeLayer(m)); bVtx=[];
+  bVtx.forEach(m=>mapB.removeLayer(m));bVtx=[];
   bPts.forEach((pt,i)=>{
     const cls=bMode==='move'?'vx cy':bMode==='del'?'vx rd':'vx am';
     const mkr=L.marker(pt,{draggable:bMode==='move',icon:L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).addTo(mapB);
-    mkr.on('dragend',()=>{bPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];bRedraw();updateAreaBadge();bSt(`Ponto ${i+1} movido`,'g');});
-    mkr.on('click',e=>{if(bMode==='del'){L.DomEvent.stopPropagation(e);bPts.splice(i,1);bRedraw();updateAreaBadge();bSt(`Ponto removido — ${bPts.length} restantes`,'');}});
+    mkr.on('dragend',()=>{bPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];bRedraw();updateAreaBadge();});
+    mkr.on('click',e=>{if(bMode==='del'){L.DomEvent.stopPropagation(e);bPts.splice(i,1);bRedraw();updateAreaBadge();}});
     bVtx.push(mkr);
   });
   updateAreaBadge();
@@ -313,44 +288,42 @@ mapB.on('click',e=>{
   if(bMode!=='add')return;
   bPts.push([e.latlng.lat,e.latlng.lng]);
   bRedraw();
-  bSt(`${bPts.length} ponto${bPts.length>1?'s':''} — continue ou vá para aba CIRCUITO`,'');
+  bSt(`${bPts.length} pontos — continue ou clique ▶ GERAR CIRCUITO`,'');
 });
 
 function limparBairro(){
   bPts=[];
   if(bPolyLayer)mapB.removeLayer(bPolyLayer);
-  bPolyLayer=null; bVtx.forEach(m=>mapB.removeLayer(m)); bVtx=[];
+  bPolyLayer=null;bVtx.forEach(m=>mapB.removeLayer(m));bVtx=[];
   document.getElementById('confirm-banner').classList.remove('show');
   updateAreaBadge();
-  bSt('Limpo','');
-  setBMode('add');
+  bSt('Limpo','');setBMode('add');
 }
 
-// ── BUSCA BAIRRO ──────────────────────────────────────────────
+// ── BUSCA ─────────────────────────────────────────────────────
 async function buscarBairro(){
   const q=document.getElementById('bairro-input').value.trim();
   const c=document.getElementById('cidade-input').value.trim()||'Brasil';
   if(!q)return;
-  bSt(`Buscando "${q}" em ${c}...`,'y');
+  bSt(`Buscando "${q}"...`,'y');
   document.getElementById('confirm-banner').classList.remove('show');
   try{
-    const query=encodeURIComponent(`${q}, ${c}`);
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.0'}});
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', '+c)}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.1'}});
     const data=await res.json();
     const item=data.find(d=>['suburb','neighbourhood','quarter','residential'].includes(d.type))||data[0];
-    if(!item){bSt('Bairro não encontrado — tente outro nome ou cidade','r');return;}
+    if(!item){bSt('Não encontrado — tente outro nome','r');return;}
     const bb=item.boundingbox;
     mapB.fitBounds([[+bb[0],+bb[2]],[+bb[1],+bb[3]]],{padding:[20,20]});
     pendingName=item.display_name.split(',').slice(0,2).join(',').trim();
     if(item.geojson&&(item.geojson.type==='Polygon'||item.geojson.type==='MultiPolygon')){
       pendingGeojson=item.geojson;
-      document.getElementById('confirm-name').textContent=`Encontrado: ${pendingName}`;
+      document.getElementById('confirm-name').textContent=`"${pendingName}" — é esse?`;
       document.getElementById('confirm-banner').classList.add('show');
-      bSt(`Confirme se é o bairro correto`,'y');
+      bSt('Confirme o bairro encontrado','y');
     }else{
-      bSt(`Encontrado mas sem polígono — desenhe manualmente`,'');
+      bSt('Encontrado sem polígono — desenhe manualmente','');
     }
-  }catch(e){bSt('Erro na busca — verifique a conexão','r');}
+  }catch(e){bSt('Erro na busca','r');}
 }
 document.getElementById('bairro-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
 document.getElementById('cidade-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
@@ -358,71 +331,27 @@ document.getElementById('cidade-input').addEventListener('keydown',e=>{if(e.key=
 function confirmarBairro(){
   if(!pendingGeojson)return;
   let coords=pendingGeojson.type==='Polygon'?pendingGeojson.coordinates[0]:pendingGeojson.coordinates[0][0];
-  const want=Math.min(28,Math.max(16,Math.floor(coords.length/4)));
+  const want=Math.min(28,Math.max(14,Math.floor(coords.length/4)));
   const step=Math.max(1,Math.floor(coords.length/want));
   bPts=coords.filter((_,i)=>i%step===0).map(c=>[c[1],c[0]]);
   if(bPts.length>1){const[f,l]=[bPts[0],bPts[bPts.length-1]];if(Math.abs(f[0]-l[0])<0.00001&&Math.abs(f[1]-l[1])<0.00001)bPts.pop();}
   bRedraw();
   document.getElementById('confirm-banner').classList.remove('show');
-  bSt(`"${pendingName}" aplicado — ajuste os pontos se necessário`,'g');
+  bSt(`"${pendingName}" aplicado — ajuste se necessário`,'g');
   pendingGeojson=null;
 }
 function rejeitarBairro(){
   document.getElementById('confirm-banner').classList.remove('show');
-  bSt('Busca rejeitada — tente outro nome','');
+  bSt('Rejeitado — tente outro nome','');
   pendingGeojson=null;
 }
 
-// ── CIRCUITO MODE ─────────────────────────────────────────────
-function setCMode(m){
-  cMode=m;
-  ['cBtnAdd','cBtnMove','cBtnDel'].forEach(id=>document.getElementById(id).className='btn');
-  const map={'add':'cBtnAdd','move':'cBtnMove','del':'cBtnDel'};
-  const cls={'add':'on','move':'on-move','del':'on-del'};
-  document.getElementById(map[m]).className='btn '+cls[m];
-  cRedrawVtx();
-  cSt(m==='add'?'Toque no mapa para adicionar ponto à rota':m==='move'?'Arraste um ponto para ajustá-lo':'Toque num ponto para removê-lo','');
-}
-
-function cRedrawVtx(){
-  cVtx.forEach(m=>mapC.removeLayer(m)); cVtx=[];
-  if(!cPts.length)return;
-  cPts.forEach((pt,i)=>{
-    const cls=cMode==='move'?'vx pu cy':cMode==='del'?'vx pu rd':'vx pu';
-    const mkr=L.marker(pt,{draggable:cMode==='move',icon:L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).addTo(mapC);
-    mkr.on('dragend',()=>{cPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];if(cRouteLayer){mapC.removeLayer(cRouteLayer);cRouteLayer=L.polyline(cPts,{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);}cSt(`Ponto ${i+1} movido`,'g');});
-    mkr.on('click',e=>{if(cMode==='del'){L.DomEvent.stopPropagation(e);cPts.splice(i,1);cVtx.forEach(m=>mapC.removeLayer(m));cVtx=[];if(cRouteLayer){mapC.removeLayer(cRouteLayer);cRouteLayer=L.polyline(cPts,{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);}cRedrawVtx();cSt(`Ponto removido — ${cPts.length} restantes`,'');}});
-    cVtx.push(mkr);
-  });
-}
-
-mapC.on('click',e=>{
-  if(cMode!=='add')return;
-  const pt=[e.latlng.lat,e.latlng.lng];
-  cPts.push(pt);
-  if(cRouteLayer){mapC.removeLayer(cRouteLayer);}
-  cRouteLayer=L.polyline(cPts,{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);
-  cRedrawVtx();
-  cSt(`Ponto adicionado — ${cPts.length} pts na rota`,'');
-});
-
-function limparCircuito(){
-  cPts=[];
-  if(cRouteLayer)mapC.removeLayer(cRouteLayer); cRouteLayer=null;
-  if(cStartMkr)mapC.removeLayer(cStartMkr); cStartMkr=null;
-  cVtx.forEach(m=>mapC.removeLayer(m)); cVtx=[];
-  document.getElementById('result').classList.remove('show');
-  document.getElementById('export-row').classList.remove('show');
-  lastGeom=null;
-  cSt('Limpo','');
-  setCMode('add');
-}
-
 // ── DENSITY ───────────────────────────────────────────────────
+let densityTarget=40; // número alvo de waypoints para OSRM trip
 function setDensity(d){
   [1,2,3].forEach(i=>document.getElementById('d'+i).className='btn'+(i===d?' on':''));
-  densityM=d===1?150:d===2?100:60;
-  cSt({1:'Principal (~150m)',2:'Equilibrado (~100m)',3:'Total (~60m)'}[d]+' — clique ▶ GERAR','');
+  densityTarget=d===1?25:d===2?40:60;
+  cSt({1:'Leve (~25 pts)',2:'Médio (~40 pts)',3:'Denso (~60 pts)'}[d]+' — clique ▶ GERAR','');
 }
 
 // ── GEOMETRY ──────────────────────────────────────────────────
@@ -435,41 +364,30 @@ function scanLine(poly,lat){
   return xs.sort((a,b)=>a-b);
 }
 
-function coverageLawnmower(poly,spcM,startPt){
-  const lats=poly.map(p=>p[0]),lons=poly.map(p=>p[1]);
+// Grade controlada: gera exatamente N pontos bem distribuídos dentro do polígono
+function gradeControlada(poly, n){
+  const lats=poly.map(p=>p[0]);
   const[loLat,hiLat]=[Math.min(...lats),Math.max(...lats)];
-  const centerLat=(loLat+hiLat)/2,centerLon=(Math.min(...lons)+Math.max(...lons))/2;
-  let numRows=Math.max(2,Math.round((hiLat-loLat)/(spcM/111320))+1);
-  if(numRows%2!==0)numRows+=1;
-  const stepLat=(hiLat-loLat)/(numRows-1);
-  const goSN=startPt?(startPt[0]<=centerLat):true;
-  const startLtr=startPt?(startPt[1]<=centerLon):true;
-  const startLatVal=goSN?loLat:hiLat,stepDir=goSN?stepLat:-stepLat;
-  const out=[];let ltr=startLtr;
-  for(let i=0;i<numRows;i++){
-    const lat=startLatVal+i*stepDir;
+  // Quantas linhas: sqrt(n) arredondado
+  const nRows=Math.max(3,Math.round(Math.sqrt(n*1.5)));
+  const stepLat=(hiLat-loLat)/nRows;
+  const allPts=[];
+  let ltr=true;
+  for(let i=0;i<=nRows;i++){
+    const lat=loLat+i*stepLat;
     const xs=scanLine(poly,lat);
     const row=[];
     for(let j=0;j<xs.length-1;j+=2){
-      const stepLon=spcM/(111320*Math.cos(lat*Math.PI/180));
-      for(let lon=xs[j];lon<=xs[j+1];lon+=stepLon)row.push([lat,lon]);
+      const nCols=Math.max(2,Math.round(n/nRows));
+      const stepLon=(xs[j+1]-xs[j])/nCols;
+      for(let k=0;k<=nCols;k++)row.push([lat,xs[j]+k*stepLon]);
     }
-    if(row.length){if(!ltr)row.reverse();out.push(...row);ltr=!ltr;}
+    if(row.length){if(!ltr)row.reverse();allPts.push(...row);ltr=!ltr;}
   }
-  return out;
-}
-
-function bestStart(poly){
-  const border=[];
-  for(let i=0;i<poly.length;i++){
-    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
-    for(let t=0;t<=1;t+=0.1)border.push([la+(lb-la)*t,lo+(lp-lo)*t]);
-  }
-  const lats=poly.map(p=>p[0]),lons=poly.map(p=>p[1]);
-  const corners=[[Math.min(...lats),Math.min(...lons)],[Math.min(...lats),Math.max(...lons)],[Math.max(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
-  let best=border[0],bScore=Infinity;
-  for(const p of border){const s=Math.min(...corners.map(c=>Math.hypot(p[0]-c[0],p[1]-c[1])));if(s<bScore){bScore=s;best=p;}}
-  return best;
+  // Subsample para exatamente N pontos
+  if(allPts.length<=n)return allPts;
+  const step=Math.floor(allPts.length/n);
+  return allPts.filter((_,i)=>i%step===0).slice(0,n);
 }
 
 function haversine(a,b){
@@ -477,10 +395,7 @@ function haversine(a,b){
   const s=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(s));
 }
-
-function distHaversine(pts2){
-  let d=0;for(let i=0;i<pts2.length-1;i++)d+=haversine(pts2[i],pts2[i+1]);return d;
-}
+function distH(pts){let d=0;for(let i=0;i<pts.length-1;i++)d+=haversine(pts[i],pts[i+1]);return d;}
 
 function fmtT(h){
   const hh=Math.floor(h),mm=Math.round((h-hh)*60);
@@ -488,42 +403,32 @@ function fmtT(h){
   return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;
 }
 
-async function osrmRouteChunked(pts2){
-  const CHUNK=80;let totalGeom=[];
-  for(let i=0;i<pts2.length;i+=CHUNK-1){
-    const chunk=pts2.slice(i,i+CHUNK);
-    if(chunk.length<2)continue;
-    const coords=chunk.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
-    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,{signal:AbortSignal.timeout(25000)});
-    if(!r.ok)throw new Error('OSRM '+r.status);
-    const d=await r.json();
-    if(d.code!=='Ok')throw new Error(d.code);
-    const geom=d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-    if(totalGeom.length>0)totalGeom.push(...geom.slice(1));
-    else totalGeom.push(...geom);
-  }
-  return totalGeom;
+// OSRM /trip — fecha circuito automaticamente, máx 100 pts
+async function osrmTrip(pts){
+  const coords=pts.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
+  const url=`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson`;
+  const r=await fetch(url,{signal:AbortSignal.timeout(30000)});
+  if(!r.ok)throw new Error('OSRM '+r.status);
+  const d=await r.json();
+  if(d.code!=='Ok')throw new Error(d.code);
+  return{distM:d.trips[0].distance,geom:d.trips[0].geometry.coordinates.map(c=>[c[1],c[0]])};
 }
 
 // ── ANIMAÇÃO ──────────────────────────────────────────────────
-function animateRoute(geom, onDone){
-  if(cRouteLayer){mapC.removeLayer(cRouteLayer);cRouteLayer=null;}
-  cVtx.forEach(m=>mapC.removeLayer(m));cVtx=[];
+function animateRoute(geomLL,onDone){
+  // Limpa rota anterior
+  mapC.eachLayer(l=>{if(l._isRoute||l._isStart)mapC.removeLayer(l);});
 
+  const line=L.polyline([],{color:'#C084FC',weight:3,opacity:.9}).addTo(mapC);
+  line._isRoute=true;
+  lastGeom=geomLL;
+
+  const total=geomLL.length;
+  const step=Math.max(1,Math.floor(total/150));
   let i=0;
-  const step=Math.max(1,Math.floor(geom.length/200)); // máx 200 frames
-  const line=L.polyline([],{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);
-  cRouteLayer=line;
-
   function tick(){
-    if(i>=geom.length){
-      cPts=[...geom];
-      cRedrawVtx();
-      if(onDone)onDone();
-      return;
-    }
-    line.addLatLng(geom[i]);
-    i+=step;
+    if(i>=total){if(onDone)onDone();return;}
+    for(let k=0;k<step&&i<total;k++,i++)line.addLatLng(geomLL[i]);
     requestAnimationFrame(tick);
   }
   tick();
@@ -532,68 +437,83 @@ function animateRoute(geom, onDone){
 // ── GERAR ─────────────────────────────────────────────────────
 async function gerar(){
   if(bPts.length<3){cSt('Defina o bairro na aba BAIRRO primeiro','r');showTab('bairro');return;}
+
   const horas=parseFloat(document.getElementById('iHoras').value)||3;
   const cliente=document.getElementById('iCliente').value||'—';
   const campanha=document.getElementById('iCampanha').value||'—';
-
-  // Sincroniza mapa circuito com bairro
-  mapC.fitBounds(mapB.getBounds());
-
-  // Desenha perímetro do bairro no mapa circuito (referência)
-  L.polygon(bPts,{color:'#F5C800',weight:1,fillColor:'#F5C800',fillOpacity:0.04,dashArray:'4,4'}).addTo(mapC);
-
   const areaKm2=polyAreaKm2(bPts);
-  cSt(`Área: ${areaKm2.toFixed(2)} km² — calculando grade...`,'y');
 
-  const startRef=bestStart(bPts);
-  const anchors=coverageLawnmower(bPts,densityM,startRef);
-  if(anchors.length<3){cSt('Área muito pequena','r');return;}
+  // Sincroniza mapa
+  const bounds=L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1])));
+  mapC.fitBounds(bounds,{padding:[20,20]});
 
-  const startPt=anchors[0];
-  const allPts=[...anchors,startPt];
-  const estKm=distHaversine(allPts)/1000;
+  // Perímetro de referência
+  mapC.eachLayer(l=>{if(l._isPerim)mapC.removeLayer(l);});
+  const perim=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.05,dashArray:'4,4'}).addTo(mapC);
+  perim._isPerim=true;
 
-  if(cStartMkr)mapC.removeLayer(cStartMkr);
-  cStartMkr=L.circleMarker(startPt,{radius:8,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2}).addTo(mapC).bindPopup('<b>▶ INÍCIO / FIM</b>');
+  cSt(`Calculando grade (${densityTarget} pts)...`,'y');
 
-  cSt(`Calculando rota OSRM — ${allPts.length} pontos...`,'y');
+  // Grade controlada com número alvo de pontos
+  const waypoints=gradeControlada(bPts,densityTarget);
+  if(waypoints.length<3){cSt('Área muito pequena','r');return;}
 
-  let geom, viaRua=true;
+  cSt(`Calculando circuito via ruas reais (${waypoints.length} pts)...`,'y');
+
+  let geomLL,viaRua=true,distM;
   try{
-    geom=await osrmRouteChunked(allPts);
+    const r=await osrmTrip(waypoints);
+    distM=r.distM;
+    geomLL=r.geom.map(p=>L.latLng(p[0],p[1]));
   }catch(e){
     console.error(e);
     viaRua=false;
-    geom=allPts.map(p=>({lat:p[0],lng:p[1]}));
-    geom=allPts;
+    // fallback: haversine em ordem
+    const pts=[...waypoints,waypoints[0]];
+    distM=distH(pts);
+    geomLL=pts.map(p=>L.latLng(p[0],p[1]));
   }
 
-  // Converte geom para formato correto
-  const geomLL = viaRua ? geom.map(p=>L.latLng(p[0],p[1])) : allPts.map(p=>L.latLng(p[0],p[1]));
-  lastGeom=geomLL;
+  // Ponto de início
+  mapC.eachLayer(l=>{if(l._isStart)mapC.removeLayer(l);});
+  const startMkr=L.circleMarker(geomLL[0],{radius:8,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2}).addTo(mapC).bindPopup('▶ INÍCIO / FIM');
+  startMkr._isStart=true;
 
-  cSt('Animando circuito...','y');
+  cSt('Desenhando circuito...','y');
 
-  animateRoute(geomLL, ()=>{
-    const voltaKm=estKm;
+  animateRoute(geomLL,()=>{
+    const voltaKm=viaRua?(distM/1000):(distH(waypoints.map(p=>[p[0],p[1]]))/1000);
     const voltaHr=voltaKm/SPD;
     const voltas=Math.floor(horas/voltaHr);
-    const densKm=areaKm2>0?(voltaKm/areaKm2).toFixed(1):'—';
+    const totalKm=(voltas*voltaKm).toFixed(1);
 
-    document.getElementById('rVoltaKm').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
-    document.getElementById('rVoltaT').innerHTML=fmtT(voltaHr);
-    document.getElementById('rHLabel').textContent=`${horas}h de veiculação`;
+    document.getElementById('rKm').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
+    document.getElementById('rT').innerHTML=fmtT(voltaHr);
+    document.getElementById('rHLabel').textContent=`${horas}h disponíveis`;
     document.getElementById('rVoltas').innerHTML=`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
-    document.getElementById('rTotalKm').innerHTML=`${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
-    document.getElementById('rArea').innerHTML=`${areaKm2.toFixed(2)}<span>km²</span>`;
-    document.getElementById('rPts').innerHTML=`${geomLL.length}<span>pts</span>`;
-    document.getElementById('rDens').innerHTML=`${densKm}<span>×</span>`;
-    document.getElementById('rInfo').innerHTML=`<strong>▶ INÍCIO/FIM:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}`;
-    document.getElementById('rTag').innerHTML=`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 CIRCUITO VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`;
+    document.getElementById('rTotalKm').innerHTML=`${totalKm}<span>km cobertos</span>`;
+
+    // Veredito simples
+    const pct=Math.min(100,Math.round((voltaKm/(areaKm2*12))*100));
+    document.getElementById('rVerdict').innerHTML=
+      `<strong>${cliente||'Campanha'} · ${campanha}</strong><br>`+
+      `Em <strong>${horas}h</strong> você consegue dar <strong>${voltas} volta${voltas!==1?'s':''}</strong> completa${voltas!==1?'s':''} pelo bairro.<br>`+
+      `Cobertura estimada: <strong>~${pct}% das ruas</strong> a cada passagem.`;
+
+    document.getElementById('rTag').innerHTML=`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 VIA RUAS REAIS':'≈ ESTIMATIVA'}</span>`;
     document.getElementById('result').classList.add('show');
     document.getElementById('export-row').classList.add('show');
-    cSt(`Circuito: ${voltaKm.toFixed(1)}km · ${fmtT(voltaHr)}/volta · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
+    cSt(`${voltaKm.toFixed(1)}km por volta · ${fmtT(voltaHr)} · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
   });
+}
+
+// ── LIMPAR CIRCUITO ───────────────────────────────────────────
+function limparCircuito(){
+  mapC.eachLayer(l=>{if(l._isRoute||l._isStart||l._isPerim)mapC.removeLayer(l);});
+  lastGeom=null;
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('export-row').classList.remove('show');
+  cSt('Limpo','');
 }
 
 // ── EXPORT GPX ────────────────────────────────────────────────
@@ -602,36 +522,23 @@ function exportGPX(){
   const cliente=document.getElementById('iCliente').value||'rota';
   const campanha=document.getElementById('iCampanha').value||'campanha';
   const name=`${cliente} — ${campanha}`;
-  const startISO=new Date().toISOString();
   const startMs=Date.now();
-  const totalKm=distHaversine(lastGeom.map(p=>[p.lat,p.lng]))/1000;
-  const totalSec=Math.round((totalKm/SPD)*3600);
-  const msPerPt=Math.round((totalSec*1000)/lastGeom.length);
-
+  const pts=lastGeom.map(p=>[p.lat,p.lng]);
+  const totalKm=distH(pts)/1000;
+  const totalSec=(totalKm/SPD)*3600;
+  const msPerPt=(totalSec*1000)/pts.length;
   let trkpts='';
-  lastGeom.forEach((pt,i)=>{
+  pts.forEach((pt,i)=>{
     const t=new Date(startMs+i*msPerPt).toISOString();
-    trkpts+=`      <trkpt lat="${pt.lat.toFixed(6)}" lon="${pt.lng.toFixed(6)}">\n        <time>${t}</time>\n      </trkpt>\n`;
+    trkpts+=`      <trkpt lat="${pt[0].toFixed(6)}" lon="${pt[1].toFixed(6)}">\n        <time>${t}</time>\n      </trkpt>\n`;
   });
-
-  const gpx=`<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="AUTOVISION Planejador de Rota" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata><name>${name}</name><time>${startISO}</time></metadata>
-  <trk>
-    <name>${name}</name>
-    <trkseg>
-${trkpts}    </trkseg>
-  </trk>
-</gpx>`;
-
+  const gpx=`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="AUTOVISION" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata><name>${name}</name><time>${new Date(startMs).toISOString()}</time></metadata>\n  <trk><name>${name}</name><trkseg>\n${trkpts}  </trkseg></trk>\n</gpx>`;
   const blob=new Blob([gpx],{type:'application/gpx+xml'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;
-  a.download=`autovision-${cliente}-${campanha}.gpx`.replace(/\s+/g,'-').toLowerCase();
-  a.click();
-  URL.revokeObjectURL(url);
-  cSt('GPX exportado com timestamps — importe em strava.com/upload','g');
+  a.href=url;a.download=`autovision-${cliente}-${campanha}.gpx`.replace(/\s+/g,'-').toLowerCase();
+  a.click();URL.revokeObjectURL(url);
+  cSt('GPX exportado — importe em strava.com/upload','g');
 }
 </script>
 </body>
