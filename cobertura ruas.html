@@ -5,318 +5,427 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AUTOVISION — Rota</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js">
-// ── EXPORT GPX ───────────────────────────────────────────────
-function exportGPX() {
-  if (!routeLayer) { st('Gere a rota primeiro','r'); return; }
-  const cliente  = document.getElementById('iCliente').value || 'rota';
-  const campanha = document.getElementById('iCampanha').value || 'campanha';
-  const name     = `${cliente} — ${campanha}`.replace(/[^a-zA-Z0-9\s\-]/g,'');
-  const now      = new Date().toISOString();
-
-  // Pega coordenadas da polyline desenhada no mapa
-  const latlngs  = routeLayer.getLatLngs();
-
-  let trkpts = '';
-  latlngs.forEach(pt => {
-    trkpts += `      <trkpt lat="${pt.lat.toFixed(6)}" lon="${pt.lng.toFixed(6)}">\n`;
-    trkpts += `        <time>${now}</time>\n`;
-    trkpts += `      </trkpt>\n`;
-  });
-
-  const gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="AUTOVISION Planejador de Rota"
-  xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata>
-    <name>${name}</name>
-    <time>${now}</time>
-  </metadata>
-  <trk>
-    <name>${name}</name>
-    <trkseg>
-${trkpts}    </trkseg>
-  </trk>
-</gpx>`;
-
-  const blob = new Blob([gpx], {type:'application/gpx+xml'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `autovision-${cliente}-${campanha}.gpx`.replace(/\s+/g,'-').toLowerCase();
-  a.click();
-  URL.revokeObjectURL(url);
-  st('GPX exportado — importe em strava.com/upload','g');
-}
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-  :root{--am:#F5C800;--bg:#0A0A0A;--panel:#111;--border:#2A2A2A;--text:#E0E0E0;--muted:#666;--green:#4CAF50;--orange:#F5A623;--purple:#C084FC;--red:#FF4444}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-  #header{background:var(--bg);border-bottom:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .logo{font-size:11px;letter-spacing:4px;color:var(--am);font-weight:bold}
-  .sub{font-size:8px;color:var(--muted);letter-spacing:2px}
-  #row-inputs{background:var(--panel);border-bottom:1px solid var(--border);padding:7px 12px;display:flex;gap:7px;flex-shrink:0}
-  .ig{display:flex;flex-direction:column;gap:2px;flex:1;min-width:60px}
-  .il{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-  input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
-  input:focus{border-color:var(--am)}
-  #row-search{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:7px;align-items:center;flex-shrink:0}
-  #bairro-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
-  #bairro-input:focus{border-color:var(--am)}
-  #row-density{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:7px;align-items:center;flex-shrink:0}
-  #row-toolbar{background:var(--bg);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:6px;flex-shrink:0;overflow-x:auto}
-  .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
-  .btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
-  .btn.on-move{background:#001A1A;border-color:#00CCCC;color:#00CCCC}
-  .btn.on-del{background:#1A0000;border-color:var(--red);color:var(--red)}
-  .btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
-  .btn.danger{border-color:#3A1010;color:#884444}
-  .btn.sm{padding:6px 9px;font-size:13px}
-  #map{flex:1}
-  #statusbar{background:var(--panel);border-top:1px solid var(--border);padding:5px 12px;font-size:10px;color:var(--muted);letter-spacing:1px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:7px}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
-  .dot.g{background:var(--green);box-shadow:0 0 6px var(--green)}
-  .dot.y{background:var(--am);box-shadow:0 0 6px var(--am);animation:pulse 1s infinite}
-  .dot.r{background:var(--red)}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  #result{display:none;background:var(--panel);border-top:2px solid var(--am);padding:11px 12px;flex-shrink:0}
-  #result.show{display:block}
-  .rg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-  .rl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
-  .rv{font-size:20px;font-weight:bold;color:var(--purple)}
-  .rv span{font-size:10px;color:var(--muted);margin-left:3px}
-  .rv.or{color:var(--orange)}
-  .rv.blue{color:#4A90FF}
-  .ri{margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
-  .ri strong{color:var(--am)}
-  .rtag{display:inline-block;margin-top:5px;font-size:9px;padding:3px 8px;border-radius:2px;letter-spacing:1px}
-  .rtag.real{background:#0A1F0A;border:1px solid #1A4A1A;color:var(--green)}
-  .rtag.est{background:#1A1200;border:1px solid #3A2A00;color:var(--orange)}
-  .rtag.warn{background:#1A1000;border:1px solid #4A3000;color:var(--orange)}
-  .gps-dot{width:14px;height:14px;border-radius:50%;background:#4A90FF;border:2px solid white;box-shadow:0 0 8px #4A90FF}
-  .vx{width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
-  .vx.add-mode{background:var(--am);cursor:crosshair}
-  .vx.move-mode{background:#00CCCC;cursor:grab}
-  .vx.del-mode{background:var(--red);cursor:pointer}
+:root{
+  --am:#F5C800;--bg:#0A0A0A;--panel:#111;--panel2:#161616;
+  --border:#2A2A2A;--text:#E0E0E0;--muted:#555;
+  --green:#4CAF50;--orange:#F5A623;--purple:#C084FC;--red:#FF4444;--cyan:#00CCCC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+/* HEADER */
+#hdr{background:var(--bg);border-bottom:1px solid var(--border);padding:7px 12px;flex-shrink:0}
+#hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.logo{font-size:11px;letter-spacing:4px;color:var(--am);font-weight:bold}
+.sub{font-size:8px;color:var(--muted);letter-spacing:2px}
+#hdr-fields{display:flex;gap:7px}
+.ig{display:flex;flex-direction:column;gap:2px;flex:1;min-width:55px}
+.il{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+input[type=text],input[type=number]{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
+input:focus{border-color:var(--am)}
+
+/* TABS */
+#tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:9px 0;text-align:center;font-size:10px;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase}
+.tab.active{color:var(--am);border-bottom-color:var(--am);background:#0F0E00}
+
+/* TAB PANELS */
+#tab-bairro,#tab-circuito{display:none;flex-direction:column;flex:1;overflow:hidden}
+#tab-bairro.show,#tab-circuito.show{display:flex}
+
+/* TOOLBAR ROWS */
+.trow{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;align-items:center;flex-shrink:0;overflow-x:auto}
+.trow-label{font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap}
+
+/* SEARCH ROW */
+#search-row{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;flex-shrink:0}
+#bairro-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
+#bairro-input:focus{border-color:var(--am)}
+#cidade-input{width:110px;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:11px;padding:6px 7px;border-radius:2px;outline:none}
+#cidade-input:focus{border-color:var(--am)}
+
+/* CONFIRM BANNER */
+#confirm-banner{display:none;background:#1A1500;border-bottom:1px solid #3A2A00;padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
+#confirm-banner.show{display:flex}
+#confirm-name{font-size:11px;color:var(--am);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* BUTTONS */
+.btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
+.btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
+.btn.on-move{background:#001A1A;border-color:var(--cyan);color:var(--cyan)}
+.btn.on-del{background:#1A0000;border-color:var(--red);color:var(--red)}
+.btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
+.btn.confirm{background:#1A3A00;border-color:var(--green);color:var(--green)}
+.btn.cancel{background:#1A0000;border-color:var(--red);color:var(--red)}
+.btn.danger{border-color:#3A1010;color:#884444}
+.btn.sm{padding:5px 8px;font-size:13px}
+.btn.full{width:100%;font-size:11px}
+
+/* MAP */
+.map-wrap{flex:1;position:relative}
+.map-wrap .leaflet-container{height:100%;width:100%}
+
+/* STATUS */
+.statusbar{background:var(--panel);border-top:1px solid var(--border);padding:5px 10px;font-size:10px;color:var(--muted);letter-spacing:1px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.dot.g{background:var(--green);box-shadow:0 0 5px var(--green)}
+.dot.y{background:var(--am);box-shadow:0 0 5px var(--am);animation:pulse 1s infinite}
+.dot.r{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* RESULT PANEL */
+#result{display:none;background:var(--panel);border-top:2px solid var(--am);padding:10px 12px;flex-shrink:0}
+#result.show{display:block}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border)}
+.rl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.rv{font-size:19px;font-weight:bold;color:var(--purple)}
+.rv span{font-size:10px;color:var(--muted);margin-left:2px}
+.rv.or{color:var(--orange)}
+.rv.bl{color:#4A90FF;font-size:14px}
+.rinfo{margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
+.rinfo strong{color:var(--am)}
+.rtag{display:inline-block;margin-top:5px;font-size:9px;padding:2px 7px;border-radius:2px;letter-spacing:1px}
+.rtag.real{background:#0A1F0A;border:1px solid #1A4A1A;color:var(--green)}
+.rtag.est{background:#1A1200;border:1px solid #3A2A00;color:var(--orange)}
+
+/* VERTEX MARKERS */
+.vx{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+.vx.am{background:var(--am)}
+.vx.cy{background:var(--cyan);cursor:grab}
+.vx.rd{background:var(--red);cursor:pointer}
+.vx.pu{background:var(--purple)}
+.vx.pu.cy{background:var(--cyan);cursor:grab}
+.vx.pu.rd{background:var(--red);cursor:pointer}
+
+/* AREA BADGE */
+#area-badge{font-size:9px;color:var(--muted);letter-spacing:1px}
+
+/* GPS DOT */
+.gps-dot{width:13px;height:13px;border-radius:50%;background:#4A90FF;border:2px solid #fff;box-shadow:0 0 7px #4A90FF}
+
+/* EXPORT ROW */
+#export-row{display:none;background:var(--bg);border-top:1px solid var(--border);padding:7px 12px;flex-shrink:0}
+#export-row.show{display:block}
 </style>
 </head>
 <body>
 
-<div id="header">
-  <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v2.6</div></div>
-  <div id="area-badge" style="font-size:9px;color:var(--muted);letter-spacing:1px"></div>
-</div>
-
-<div id="row-inputs">
-  <div class="ig"><div class="il">Cliente</div><input id="iCliente" value="CYBER"/></div>
-  <div class="ig"><div class="il">Campanha</div><input id="iCampanha" value="Junho 2026"/></div>
-  <div class="ig" style="max-width:60px"><div class="il">Horas</div><input id="iHoras" type="number" value="3" min="0.5" max="12" step="0.5"/></div>
-</div>
-
-<div id="row-search">
-  <input id="bairro-input" placeholder="🔍 Buscar bairro (ex: Rubem Berta, POA)"/>
-  <button class="btn" onclick="buscarBairro()">BUSCAR</button>
-  <button class="btn sm" onclick="irGPS()">📍</button>
-</div>
-
-<div id="row-density">
-  <div style="font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap">DENSIDADE</div>
-  <button class="btn on" id="d1" onclick="setDensity(1)">🔵 Principal</button>
-  <button class="btn"    id="d2" onclick="setDensity(2)">🟡 Equilibrado</button>
-  <button class="btn"    id="d3" onclick="setDensity(3)">🔴 Total</button>
-</div>
-
-<div id="row-toolbar">
-  <button class="btn on"  id="btnAdd"  onclick="setMode('add')">✚ Adicionar</button>
-  <button class="btn"     id="btnMove" onclick="setMode('move')">✎ Mover</button>
-  <button class="btn"     id="btnDel"  onclick="setMode('del')">✕ Remover</button>
-  <button class="btn primary"          onclick="gerar()">▶ GERAR</button>
-  <button class="btn danger"           onclick="limpar()">🗑</button>
-</div>
-
-<div id="map"></div>
-
-<div id="statusbar">
-  <div class="dot" id="dot"></div>
-  <span id="stxt">Busque um bairro ou toque no mapa para criar o perímetro</span>
-</div>
-
-<div id="result">
-  <div class="rg">
-    <div>
-      <div class="rl">1 volta completa</div>
-      <div class="rv" id="rVoltaKm">—<span>km</span></div>
-      <div class="rv" id="rVoltaT" style="font-size:16px;margin-top:2px">—</div>
-    </div>
-    <div>
-      <div class="rl" id="rHLabel">— h de veiculação</div>
-      <div class="rv or" id="rVoltas">—<span>voltas</span></div>
-      <div class="rv or" id="rTotalKm" style="font-size:16px;margin-top:2px">—<span>km total</span></div>
+<!-- FIXED HEADER -->
+<div id="hdr">
+  <div id="hdr-top">
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.0</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="area-badge"></div>
+      <button class="btn sm" onclick="irGPS()">📍</button>
     </div>
   </div>
-  <!-- Indicadores de sanidade -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
-    <div>
-      <div class="rl">Área</div>
-      <div class="rv blue" id="rArea" style="font-size:14px">—<span>km²</span></div>
-    </div>
-    <div>
-      <div class="rl">Pts cobertura</div>
-      <div class="rv blue" id="rPts" style="font-size:14px">—</div>
-    </div>
-    <div>
-      <div class="rl">km/km²</div>
-      <div class="rv blue" id="rDensKm" style="font-size:14px">—</div>
-    </div>
+  <div id="hdr-fields">
+    <div class="ig"><div class="il">Cliente</div><input type="text" id="iCliente" value="CYBER"/></div>
+    <div class="ig"><div class="il">Campanha</div><input type="text" id="iCampanha" value="Junho 2026"/></div>
+    <div class="ig" style="max-width:58px"><div class="il">Horas</div><input type="number" id="iHoras" value="3" min="0.5" max="12" step="0.5"/></div>
   </div>
-  <div class="ri" id="rInfo"></div>
-  <div id="rTag"></div>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <div class="tab active" id="tab-btn-bairro" onclick="showTab('bairro')">▣ BAIRRO</div>
+  <div class="tab"        id="tab-btn-circuito" onclick="showTab('circuito')">⟳ CIRCUITO</div>
+</div>
+
+<!-- TAB: BAIRRO -->
+<div id="tab-bairro" class="show">
+  <div id="search-row">
+    <input id="bairro-input" placeholder="Nome do bairro" value="Rubem Berta"/>
+    <input id="cidade-input" placeholder="Cidade, UF" value="Porto Alegre, RS"/>
+    <button class="btn" onclick="buscarBairro()">BUSCAR</button>
+  </div>
+
+  <div id="confirm-banner">
+    <div id="confirm-name"></div>
+    <button class="btn confirm" onclick="confirmarBairro()">✓ USAR</button>
+    <button class="btn cancel"  onclick="rejeitarBairro()">✕</button>
+  </div>
+
+  <div class="trow">
+    <button class="btn on" id="bBtnAdd"  onclick="setBMode('add')">✚ Adicionar</button>
+    <button class="btn"    id="bBtnMove" onclick="setBMode('move')">✎ Mover</button>
+    <button class="btn"    id="bBtnDel"  onclick="setBMode('del')">✕ Remover</button>
+    <button class="btn danger" onclick="limparBairro()">🗑</button>
+  </div>
+
+  <div class="map-wrap">
+    <div id="map-bairro"></div>
+  </div>
+
+  <div class="statusbar">
+    <div class="dot" id="bDot"></div>
+    <span id="bSt">Busque um bairro para começar</span>
+  </div>
+</div>
+
+<!-- TAB: CIRCUITO -->
+<div id="tab-circuito">
+  <div class="trow">
+    <div class="trow-label">DENSIDADE</div>
+    <button class="btn on" id="d1" onclick="setDensity(1)">🔵 Principal</button>
+    <button class="btn"    id="d2" onclick="setDensity(2)">🟡 Equilibrado</button>
+    <button class="btn"    id="d3" onclick="setDensity(3)">🔴 Total</button>
+  </div>
+
+  <div class="trow">
+    <button class="btn on"  id="cBtnAdd"  onclick="setCMode('add')">✚ Adicionar</button>
+    <button class="btn"     id="cBtnMove" onclick="setCMode('move')">✎ Mover</button>
+    <button class="btn"     id="cBtnDel"  onclick="setCMode('del')">✕ Remover</button>
+    <button class="btn primary"           onclick="gerar()">▶ GERAR</button>
+    <button class="btn danger"            onclick="limparCircuito()">🗑</button>
+  </div>
+
+  <div class="map-wrap">
+    <div id="map-circuito"></div>
+  </div>
+
+  <div class="statusbar">
+    <div class="dot" id="cDot"></div>
+    <span id="cSt">Defina o bairro na aba BAIRRO e clique ▶ GERAR</span>
+  </div>
+
+  <div id="result">
+    <div class="rg">
+      <div>
+        <div class="rl">1 volta completa</div>
+        <div class="rv" id="rVoltaKm">—<span>km</span></div>
+        <div class="rv" id="rVoltaT" style="font-size:15px;margin-top:2px">—</div>
+      </div>
+      <div>
+        <div class="rl" id="rHLabel">— h de veiculação</div>
+        <div class="rv or" id="rVoltas">—<span>voltas</span></div>
+        <div class="rv or" id="rTotalKm" style="font-size:15px;margin-top:2px">—<span>km total</span></div>
+      </div>
+    </div>
+    <div class="rg3">
+      <div><div class="rl">Área</div><div class="rv bl" id="rArea">—<span>km²</span></div></div>
+      <div><div class="rl">Pts rota</div><div class="rv bl" id="rPts">—</div></div>
+      <div><div class="rl">km/km²</div><div class="rv bl" id="rDens">—<span>×</span></div></div>
+    </div>
+    <div class="rinfo" id="rInfo"></div>
+    <div id="rTag"></div>
+  </div>
+
+  <div id="export-row">
+    <button class="btn primary full" onclick="exportGPX()">⬇ EXPORTAR GPX — STRAVA</button>
+  </div>
 </div>
 
 <script>
 const SPD = 15;
-const map = L.map('map', {zoomControl:true, attributionControl:false});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
-map.setView([-30.0112, -51.0960], 15);
 
-let mode='add', densityM=150;
-let pts=[], polyLayer=null, vtxMarkers=[], routeLayer=null, startMkr=null, gpsMkr=null;
+// ── MAPS ──────────────────────────────────────────────────────
+const mapB = L.map('map-bairro',  {zoomControl:true,  attributionControl:false});
+const mapC = L.map('map-circuito',{zoomControl:true,  attributionControl:false});
+const TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+L.tileLayer(TILES,{maxZoom:19}).addTo(mapB);
+L.tileLayer(TILES,{maxZoom:19}).addTo(mapC);
+mapB.setView([-30.0112,-51.0960],14);
+mapC.setView([-30.0112,-51.0960],14);
 
-// ── STATUS ────────────────────────────────────────────────────
-function st(msg,cls){
-  document.getElementById('stxt').textContent=msg;
-  document.getElementById('dot').className='dot'+(cls?' '+cls:'');
+// ── STATE ─────────────────────────────────────────────────────
+let bPts=[], bMode='add', bPolyLayer=null, bVtx=[], gpsMkr=null;
+let pendingGeojson=null, pendingName='';
+let cPts=[], cMode='add', cRouteLayer=null, cVtx=[], cStartMkr=null;
+let densityM=150;
+let lastGeom=null; // for GPX export
+
+// ── TABS ──────────────────────────────────────────────────────
+function showTab(t) {
+  ['bairro','circuito'].forEach(n=>{
+    document.getElementById('tab-'+n).classList.toggle('show', n===t);
+    document.getElementById('tab-btn-'+n).classList.toggle('active', n===t);
+  });
+  if(t==='bairro') setTimeout(()=>mapB.invalidateSize(),50);
+  else             setTimeout(()=>mapC.invalidateSize(),50);
 }
 
-// ── ÁREA DO POLÍGONO (Shoelace em metros) ─────────────────────
+// ── STATUS ────────────────────────────────────────────────────
+function bSt(msg,cls){document.getElementById('bSt').textContent=msg;document.getElementById('bDot').className='dot'+(cls?' '+cls:'');}
+function cSt(msg,cls){document.getElementById('cSt').textContent=msg;document.getElementById('cDot').className='dot'+(cls?' '+cls:'');}
+
+// ── AREA ──────────────────────────────────────────────────────
 function polyAreaKm2(poly){
   if(poly.length<3)return 0;
-  let area=0;
-  const R=6371000;
+  let area=0;const R=6371000;
   for(let i=0;i<poly.length;i++){
     const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
-    const y1=la*Math.PI/180*R, x1=lo*Math.PI/180*R*Math.cos(la*Math.PI/180);
-    const y2=lb*Math.PI/180*R, x2=lp*Math.PI/180*R*Math.cos(lb*Math.PI/180);
+    const y1=la*Math.PI/180*R,x1=lo*Math.PI/180*R*Math.cos(la*Math.PI/180);
+    const y2=lb*Math.PI/180*R,x2=lp*Math.PI/180*R*Math.cos(lb*Math.PI/180);
     area+=x1*y2-x2*y1;
   }
   return Math.abs(area/2)/1e6;
 }
-
 function updateAreaBadge(){
-  if(pts.length<3){document.getElementById('area-badge').textContent='';return;}
-  const a=polyAreaKm2(pts);
-  document.getElementById('area-badge').textContent=`▣ ${a.toFixed(2)} km²`;
+  const a=bPts.length>=3?polyAreaKm2(bPts):0;
+  document.getElementById('area-badge').textContent=a>0?`▣ ${a.toFixed(2)} km²`:'';
+}
+
+// ── GPS ───────────────────────────────────────────────────────
+function irGPS(){
+  if(!navigator.geolocation){bSt('GPS indisponível','r');return;}
+  bSt('Obtendo localização...','y');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const{latitude:lat,longitude:lng}=pos.coords;
+    mapB.setView([lat,lng],16); mapC.setView([lat,lng],16);
+    if(gpsMkr){mapB.removeLayer(gpsMkr);}
+    gpsMkr=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="gps-dot"></div>',iconSize:[13,13],iconAnchor:[6,6]})}).addTo(mapB).bindPopup('📍 Você está aqui').openPopup();
+    bSt('Localização encontrada','g');
+  },()=>bSt('GPS indisponível — verifique permissões','r'),{enableHighAccuracy:true,timeout:10000});
+}
+
+// ── BAIRRO MODE ───────────────────────────────────────────────
+function setBMode(m){
+  bMode=m;
+  ['bBtnAdd','bBtnMove','bBtnDel'].forEach(id=>document.getElementById(id).className='btn');
+  const map={'add':'bBtnAdd','move':'bBtnMove','del':'bBtnDel'};
+  const cls={'add':'on','move':'on-move','del':'on-del'};
+  document.getElementById(map[m]).className='btn '+cls[m];
+  bRedraw();
+  bSt(m==='add'?'Toque no mapa para adicionar pontos':m==='move'?'Arraste um ponto para movê-lo':'Toque num ponto para removê-lo','');
+}
+
+function bRedraw(){
+  if(bPolyLayer)mapB.removeLayer(bPolyLayer);
+  if(bPts.length>=3) bPolyLayer=L.polygon(bPts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(mapB);
+  else if(bPts.length>=2) bPolyLayer=L.polyline(bPts,{color:'#F5C800',weight:2,dashArray:'5,4'}).addTo(mapB);
+  else bPolyLayer=null;
+  bVtx.forEach(m=>mapB.removeLayer(m)); bVtx=[];
+  bPts.forEach((pt,i)=>{
+    const cls=bMode==='move'?'vx cy':bMode==='del'?'vx rd':'vx am';
+    const mkr=L.marker(pt,{draggable:bMode==='move',icon:L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).addTo(mapB);
+    mkr.on('dragend',()=>{bPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];bRedraw();updateAreaBadge();bSt(`Ponto ${i+1} movido`,'g');});
+    mkr.on('click',e=>{if(bMode==='del'){L.DomEvent.stopPropagation(e);bPts.splice(i,1);bRedraw();updateAreaBadge();bSt(`Ponto removido — ${bPts.length} restantes`,'');}});
+    bVtx.push(mkr);
+  });
+  updateAreaBadge();
+}
+
+mapB.on('click',e=>{
+  if(bMode!=='add')return;
+  bPts.push([e.latlng.lat,e.latlng.lng]);
+  bRedraw();
+  bSt(`${bPts.length} ponto${bPts.length>1?'s':''} — continue ou vá para aba CIRCUITO`,'');
+});
+
+function limparBairro(){
+  bPts=[];
+  if(bPolyLayer)mapB.removeLayer(bPolyLayer);
+  bPolyLayer=null; bVtx.forEach(m=>mapB.removeLayer(m)); bVtx=[];
+  document.getElementById('confirm-banner').classList.remove('show');
+  updateAreaBadge();
+  bSt('Limpo','');
+  setBMode('add');
+}
+
+// ── BUSCA BAIRRO ──────────────────────────────────────────────
+async function buscarBairro(){
+  const q=document.getElementById('bairro-input').value.trim();
+  const c=document.getElementById('cidade-input').value.trim()||'Brasil';
+  if(!q)return;
+  bSt(`Buscando "${q}" em ${c}...`,'y');
+  document.getElementById('confirm-banner').classList.remove('show');
+  try{
+    const query=encodeURIComponent(`${q}, ${c}`);
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.0'}});
+    const data=await res.json();
+    const item=data.find(d=>['suburb','neighbourhood','quarter','residential'].includes(d.type))||data[0];
+    if(!item){bSt('Bairro não encontrado — tente outro nome ou cidade','r');return;}
+    const bb=item.boundingbox;
+    mapB.fitBounds([[+bb[0],+bb[2]],[+bb[1],+bb[3]]],{padding:[20,20]});
+    pendingName=item.display_name.split(',').slice(0,2).join(',').trim();
+    if(item.geojson&&(item.geojson.type==='Polygon'||item.geojson.type==='MultiPolygon')){
+      pendingGeojson=item.geojson;
+      document.getElementById('confirm-name').textContent=`Encontrado: ${pendingName}`;
+      document.getElementById('confirm-banner').classList.add('show');
+      bSt(`Confirme se é o bairro correto`,'y');
+    }else{
+      bSt(`Encontrado mas sem polígono — desenhe manualmente`,'');
+    }
+  }catch(e){bSt('Erro na busca — verifique a conexão','r');}
+}
+document.getElementById('bairro-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
+document.getElementById('cidade-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
+
+function confirmarBairro(){
+  if(!pendingGeojson)return;
+  let coords=pendingGeojson.type==='Polygon'?pendingGeojson.coordinates[0]:pendingGeojson.coordinates[0][0];
+  const want=Math.min(28,Math.max(16,Math.floor(coords.length/4)));
+  const step=Math.max(1,Math.floor(coords.length/want));
+  bPts=coords.filter((_,i)=>i%step===0).map(c=>[c[1],c[0]]);
+  if(bPts.length>1){const[f,l]=[bPts[0],bPts[bPts.length-1]];if(Math.abs(f[0]-l[0])<0.00001&&Math.abs(f[1]-l[1])<0.00001)bPts.pop();}
+  bRedraw();
+  document.getElementById('confirm-banner').classList.remove('show');
+  bSt(`"${pendingName}" aplicado — ajuste os pontos se necessário`,'g');
+  pendingGeojson=null;
+}
+function rejeitarBairro(){
+  document.getElementById('confirm-banner').classList.remove('show');
+  bSt('Busca rejeitada — tente outro nome','');
+  pendingGeojson=null;
+}
+
+// ── CIRCUITO MODE ─────────────────────────────────────────────
+function setCMode(m){
+  cMode=m;
+  ['cBtnAdd','cBtnMove','cBtnDel'].forEach(id=>document.getElementById(id).className='btn');
+  const map={'add':'cBtnAdd','move':'cBtnMove','del':'cBtnDel'};
+  const cls={'add':'on','move':'on-move','del':'on-del'};
+  document.getElementById(map[m]).className='btn '+cls[m];
+  cRedrawVtx();
+  cSt(m==='add'?'Toque no mapa para adicionar ponto à rota':m==='move'?'Arraste um ponto para ajustá-lo':'Toque num ponto para removê-lo','');
+}
+
+function cRedrawVtx(){
+  cVtx.forEach(m=>mapC.removeLayer(m)); cVtx=[];
+  if(!cPts.length)return;
+  cPts.forEach((pt,i)=>{
+    const cls=cMode==='move'?'vx pu cy':cMode==='del'?'vx pu rd':'vx pu';
+    const mkr=L.marker(pt,{draggable:cMode==='move',icon:L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).addTo(mapC);
+    mkr.on('dragend',()=>{cPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];if(cRouteLayer){mapC.removeLayer(cRouteLayer);cRouteLayer=L.polyline(cPts,{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);}cSt(`Ponto ${i+1} movido`,'g');});
+    mkr.on('click',e=>{if(cMode==='del'){L.DomEvent.stopPropagation(e);cPts.splice(i,1);cVtx.forEach(m=>mapC.removeLayer(m));cVtx=[];if(cRouteLayer){mapC.removeLayer(cRouteLayer);cRouteLayer=L.polyline(cPts,{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);}cRedrawVtx();cSt(`Ponto removido — ${cPts.length} restantes`,'');}});
+    cVtx.push(mkr);
+  });
+}
+
+mapC.on('click',e=>{
+  if(cMode!=='add')return;
+  const pt=[e.latlng.lat,e.latlng.lng];
+  cPts.push(pt);
+  if(cRouteLayer){mapC.removeLayer(cRouteLayer);}
+  cRouteLayer=L.polyline(cPts,{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);
+  cRedrawVtx();
+  cSt(`Ponto adicionado — ${cPts.length} pts na rota`,'');
+});
+
+function limparCircuito(){
+  cPts=[];
+  if(cRouteLayer)mapC.removeLayer(cRouteLayer); cRouteLayer=null;
+  if(cStartMkr)mapC.removeLayer(cStartMkr); cStartMkr=null;
+  cVtx.forEach(m=>mapC.removeLayer(m)); cVtx=[];
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('export-row').classList.remove('show');
+  lastGeom=null;
+  cSt('Limpo','');
+  setCMode('add');
 }
 
 // ── DENSITY ───────────────────────────────────────────────────
 function setDensity(d){
   [1,2,3].forEach(i=>document.getElementById('d'+i).className='btn'+(i===d?' on':''));
   densityM=d===1?150:d===2?100:60;
-  const labels={1:'Principal (~150m)',2:'Equilibrado (~100m)',3:'Total (~60m)'};
-  st('Densidade: '+labels[d]+' — clique ▶ GERAR','');
+  cSt({1:'Principal (~150m)',2:'Equilibrado (~100m)',3:'Total (~60m)'}[d]+' — clique ▶ GERAR','');
 }
 
-// ── MODE ──────────────────────────────────────────────────────
-const modeConfig={
-  add: {btn:'btnAdd', cls:'on',      hint:'Toque no mapa para adicionar pontos'},
-  move:{btn:'btnMove',cls:'on-move', hint:'Toque e arraste um ponto para movê-lo'},
-  del: {btn:'btnDel', cls:'on-del',  hint:'Toque num ponto para removê-lo'},
-};
-function setMode(m){
-  mode=m;
-  Object.keys(modeConfig).forEach(k=>{
-    document.getElementById(modeConfig[k].btn).className='btn'+(k===m?' '+modeConfig[k].cls:'');
-  });
-  redraw();
-  st(modeConfig[m].hint,'');
-}
-
-// ── DRAW ──────────────────────────────────────────────────────
-function redraw(){
-  if(polyLayer)map.removeLayer(polyLayer);
-  if(pts.length>=3)
-    polyLayer=L.polygon(pts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(map);
-  else if(pts.length>=2)
-    polyLayer=L.polyline(pts,{color:'#F5C800',weight:2,dashArray:'5,4'}).addTo(map);
-  vtxMarkers.forEach(m=>map.removeLayer(m));
-  vtxMarkers=[];
-  pts.forEach((pt,i)=>{
-    const draggable=(mode==='move');
-    const vxClass=mode==='move'?'vx move-mode':mode==='del'?'vx del-mode':'vx add-mode';
-    const mkr=L.marker(pt,{draggable,icon:L.divIcon({className:'',html:`<div class="${vxClass}"></div>`,iconSize:[13,13],iconAnchor:[6,6]})}).addTo(map);
-    mkr.on('dragend',()=>{pts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];redraw();updateAreaBadge();st(`Ponto ${i+1} movido`,'g');});
-    mkr.on('click',e=>{
-      if(mode==='del'){L.DomEvent.stopPropagation(e);pts.splice(i,1);redraw();updateAreaBadge();st(`Ponto removido — ${pts.length} restantes`,'');}
-    });
-    vtxMarkers.push(mkr);
-  });
-  updateAreaBadge();
-}
-
-map.on('click',e=>{
-  if(mode!=='add')return;
-  pts.push([e.latlng.lat,e.latlng.lng]);
-  redraw();
-  st(`${pts.length} ponto${pts.length>1?'s':''} — continue ou clique ▶ GERAR`,'');
-});
-
-// ── GPS ───────────────────────────────────────────────────────
-function irGPS(){
-  if(!navigator.geolocation){st('GPS indisponível','r');return;}
-  st('Obtendo localização...','y');
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const{latitude:lat,longitude:lng}=pos.coords;
-    map.setView([lat,lng],16);
-    if(gpsMkr)map.removeLayer(gpsMkr);
-    gpsMkr=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="gps-dot"></div>',iconSize:[14,14],iconAnchor:[7,7]})})
-      .addTo(map).bindPopup('📍 Você está aqui').openPopup();
-    st('Localização encontrada','g');
-  },()=>st('Não foi possível obter GPS','r'),{enableHighAccuracy:true,timeout:10000});
-}
-
-// ── BUSCA BAIRRO ──────────────────────────────────────────────
-async function buscarBairro(){
-  const q=document.getElementById('bairro-input').value.trim();
-  if(!q)return;
-  st('Buscando '+q+'...','y');
-  try{
-    const res=await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Porto Alegre, RS, Brasil')}&format=json&polygon_geojson=1&limit=3`,
-      {headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/2.5'}}
-    );
-    const data=await res.json();
-    const item=data.find(d=>['suburb','neighbourhood','quarter'].includes(d.type))||data[0];
-    if(!item){st('Bairro não encontrado','r');return;}
-    const bb=item.boundingbox;
-    map.fitBounds([[+bb[0],+bb[2]],[+bb[1],+bb[3]]],{padding:[20,20]});
-    if(item.geojson&&(item.geojson.type==='Polygon'||item.geojson.type==='MultiPolygon')){
-      let coords=item.geojson.type==='Polygon'?item.geojson.coordinates[0]:item.geojson.coordinates[0][0];
-      const want=Math.min(28,Math.max(16,Math.floor(coords.length/4)));
-      const step=Math.max(1,Math.floor(coords.length/want));
-      pts=coords.filter((_,i)=>i%step===0).map(c=>[c[1],c[0]]);
-      if(pts.length>1){const[f,l]=[pts[0],pts[pts.length-1]];if(Math.abs(f[0]-l[0])<0.00001&&Math.abs(f[1]-l[1])<0.00001)pts.pop();}
-      redraw();
-      st(`"${item.display_name.split(',')[0]}" — use ✎ Mover para ajustar, depois ▶ GERAR`,'g');
-    }else{st('Encontrado — desenhe o perímetro manualmente','g');}
-  }catch(e){st('Erro na busca','r');}
-}
-document.getElementById('bairro-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
-
-// ── LIMPAR ────────────────────────────────────────────────────
-function limpar(){
-  pts=[];
-  [polyLayer,routeLayer,startMkr].forEach(l=>{if(l)map.removeLayer(l);});
-  vtxMarkers.forEach(m=>map.removeLayer(m));
-  polyLayer=routeLayer=startMkr=null;vtxMarkers=[];
-  document.getElementById('result').classList.remove('show');
-  document.getElementById('row-export').style.display='none';
-  document.getElementById('area-badge').textContent='';
-  st('Limpo — busque um bairro ou toque no mapa','');
-  setMode('add');
-}
-
-// ── GEOMETRIA ─────────────────────────────────────────────────
+// ── GEOMETRY ──────────────────────────────────────────────────
 function scanLine(poly,lat){
   const xs=[];
   for(let i=0;i<poly.length;i++){
@@ -335,10 +444,8 @@ function coverageLawnmower(poly,spcM,startPt){
   const stepLat=(hiLat-loLat)/(numRows-1);
   const goSN=startPt?(startPt[0]<=centerLat):true;
   const startLtr=startPt?(startPt[1]<=centerLon):true;
-  const startLatVal=goSN?loLat:hiLat;
-  const stepDir=goSN?stepLat:-stepLat;
-  const out=[];
-  let ltr=startLtr;
+  const startLatVal=goSN?loLat:hiLat,stepDir=goSN?stepLat:-stepLat;
+  const out=[];let ltr=startLtr;
   for(let i=0;i<numRows;i++){
     const lat=startLatVal+i*stepDir;
     const xs=scanLine(poly,lat);
@@ -359,13 +466,9 @@ function bestStart(poly){
     for(let t=0;t<=1;t+=0.1)border.push([la+(lb-la)*t,lo+(lp-lo)*t]);
   }
   const lats=poly.map(p=>p[0]),lons=poly.map(p=>p[1]);
-  const corners=[[Math.min(...lats),Math.min(...lons)],[Math.min(...lats),Math.max(...lons)],
-                 [Math.max(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+  const corners=[[Math.min(...lats),Math.min(...lons)],[Math.min(...lats),Math.max(...lons)],[Math.max(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
   let best=border[0],bScore=Infinity;
-  for(const p of border){
-    const s=Math.min(...corners.map(c=>Math.hypot(p[0]-c[0],p[1]-c[1])));
-    if(s<bScore){bScore=s;best=p;}
-  }
+  for(const p of border){const s=Math.min(...corners.map(c=>Math.hypot(p[0]-c[0],p[1]-c[1])));if(s<bScore){bScore=s;best=p;}}
   return best;
 }
 
@@ -375,134 +478,145 @@ function haversine(a,b){
   return 2*R*Math.asin(Math.sqrt(s));
 }
 
+function distHaversine(pts2){
+  let d=0;for(let i=0;i<pts2.length-1;i++)d+=haversine(pts2[i],pts2[i+1]);return d;
+}
+
 function fmtT(h){
   const hh=Math.floor(h),mm=Math.round((h-hh)*60);
   if(mm===60)return`${hh+1}h00`;
   return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;
 }
 
-// Distância estimada sem OSRM — soma haversine dos pontos em ordem
-function distHaversine(pts2){
-  let d=0;
-  for(let i=0;i<pts2.length-1;i++)d+=haversine(pts2[i],pts2[i+1]);
-  return d;
-}
-
-// OSRM /route chunked — SEM sobreposição de pontos entre chunks
-// Cada chunk começa no último ponto do chunk anterior (sem repetir na soma)
 async function osrmRouteChunked(pts2){
-  const CHUNK=80;
-  let totalDist=0,fullGeom=[];
+  const CHUNK=80;let totalGeom=[];
   for(let i=0;i<pts2.length;i+=CHUNK-1){
     const chunk=pts2.slice(i,i+CHUNK);
     if(chunk.length<2)continue;
     const coords=chunk.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
-    const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
-    const r=await fetch(url,{signal:AbortSignal.timeout(25000)});
+    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,{signal:AbortSignal.timeout(25000)});
     if(!r.ok)throw new Error('OSRM '+r.status);
     const d=await r.json();
     if(d.code!=='Ok')throw new Error(d.code);
-    totalDist+=d.routes[0].distance;
-    // Evita duplicar o ponto de junção: pula o primeiro ponto da geometria nos chunks 2+
     const geom=d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-    if(fullGeom.length>0&&geom.length>0)fullGeom.push(...geom.slice(1));
-    else fullGeom.push(...geom);
+    if(totalGeom.length>0)totalGeom.push(...geom.slice(1));
+    else totalGeom.push(...geom);
   }
-  return{distM:totalDist,geom:fullGeom};
+  return totalGeom;
+}
+
+// ── ANIMAÇÃO ──────────────────────────────────────────────────
+function animateRoute(geom, onDone){
+  if(cRouteLayer){mapC.removeLayer(cRouteLayer);cRouteLayer=null;}
+  cVtx.forEach(m=>mapC.removeLayer(m));cVtx=[];
+
+  let i=0;
+  const step=Math.max(1,Math.floor(geom.length/200)); // máx 200 frames
+  const line=L.polyline([],{color:'#C084FC',weight:3,opacity:.85}).addTo(mapC);
+  cRouteLayer=line;
+
+  function tick(){
+    if(i>=geom.length){
+      cPts=[...geom];
+      cRedrawVtx();
+      if(onDone)onDone();
+      return;
+    }
+    line.addLatLng(geom[i]);
+    i+=step;
+    requestAnimationFrame(tick);
+  }
+  tick();
 }
 
 // ── GERAR ─────────────────────────────────────────────────────
 async function gerar(){
-  if(pts.length<3){st('Adicione pelo menos 3 pontos ao perímetro','r');return;}
+  if(bPts.length<3){cSt('Defina o bairro na aba BAIRRO primeiro','r');showTab('bairro');return;}
   const horas=parseFloat(document.getElementById('iHoras').value)||3;
   const cliente=document.getElementById('iCliente').value||'—';
   const campanha=document.getElementById('iCampanha').value||'—';
 
-  const areaKm2=polyAreaKm2(pts);
-  st(`Área: ${areaKm2.toFixed(2)} km² — calculando grade...`,'y');
+  // Sincroniza mapa circuito com bairro
+  mapC.fitBounds(mapB.getBounds());
 
-  const startRef=bestStart(pts);
-  const anchors=coverageLawnmower(pts,densityM,startRef);
-  if(anchors.length<3){st('Área muito pequena','r');return;}
+  // Desenha perímetro do bairro no mapa circuito (referência)
+  L.polygon(bPts,{color:'#F5C800',weight:1,fillColor:'#F5C800',fillOpacity:0.04,dashArray:'4,4'}).addTo(mapC);
+
+  const areaKm2=polyAreaKm2(bPts);
+  cSt(`Área: ${areaKm2.toFixed(2)} km² — calculando grade...`,'y');
+
+  const startRef=bestStart(bPts);
+  const anchors=coverageLawnmower(bPts,densityM,startRef);
+  if(anchors.length<3){cSt('Área muito pequena','r');return;}
 
   const startPt=anchors[0];
-  const allPts=[...anchors,startPt]; // circuito fechado
+  const allPts=[...anchors,startPt];
+  const estKm=distHaversine(allPts)/1000;
 
-  // Estimativa haversine ANTES do OSRM — sanity check
-  const estM=distHaversine(allPts);
-  const estKm=estM/1000;
+  if(cStartMkr)mapC.removeLayer(cStartMkr);
+  cStartMkr=L.circleMarker(startPt,{radius:8,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2}).addTo(mapC).bindPopup('<b>▶ INÍCIO / FIM</b>');
 
-  if(startMkr)map.removeLayer(startMkr);
-  startMkr=L.circleMarker(startPt,{radius:9,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2})
-    .addTo(map).bindPopup('<b>▶ INÍCIO / FIM DO CIRCUITO</b>').openPopup();
+  cSt(`Calculando rota OSRM — ${allPts.length} pontos...`,'y');
 
-  const nChunks=Math.ceil(allPts.length/79);
-  st(`Calculando circuito — ${allPts.length} pts · ${nChunks} blocos · estimativa ~${estKm.toFixed(1)}km...`,'y');
-
-  let distM,geom,viaRua=true;
+  let geom, viaRua=true;
   try{
-    const r=await osrmRouteChunked(allPts);
-    distM=r.distM;geom=r.geom;
+    geom=await osrmRouteChunked(allPts);
   }catch(e){
     console.error(e);
     viaRua=false;
-    distM=estM;
+    geom=allPts.map(p=>({lat:p[0],lng:p[1]}));
     geom=allPts;
   }
 
-  if(routeLayer)map.removeLayer(routeLayer);
-  routeLayer=L.polyline(geom,{color:viaRua?'#C084FC':'#F5A623',weight:3,opacity:.85}).addTo(map);
+  // Converte geom para formato correto
+  const geomLL = viaRua ? geom.map(p=>L.latLng(p[0],p[1])) : allPts.map(p=>L.latLng(p[0],p[1]));
+  lastGeom=geomLL;
 
-  const voltaKm=estKm; // usa haversine, não soma OSRM
-  const voltaHr=voltaKm/SPD;
-  const voltas=Math.floor(horas/voltaHr);
-  const densKm=(areaKm2>0?(voltaKm/areaKm2):0).toFixed(1);
+  cSt('Animando circuito...','y');
 
-  // Alerta se distância OSRM > 2x estimativa haversine (sinal de duplicação)
-  const ratio=distM/estM;
-  const warnDup=ratio>2.0;
+  animateRoute(geomLL, ()=>{
+    const voltaKm=estKm;
+    const voltaHr=voltaKm/SPD;
+    const voltas=Math.floor(horas/voltaHr);
+    const densKm=areaKm2>0?(voltaKm/areaKm2).toFixed(1):'—';
 
-  document.getElementById('rVoltaKm').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
-  document.getElementById('rVoltaT').innerHTML=fmtT(voltaHr);
-  document.getElementById('rHLabel').textContent=`${horas}h de veiculação`;
-  document.getElementById('rVoltas').innerHTML=`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
-  document.getElementById('rTotalKm').innerHTML=`${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
-  document.getElementById('rArea').innerHTML=`${areaKm2.toFixed(2)}<span>km²</span>`;
-  document.getElementById('rPts').innerHTML=`${anchors.length}<span>pts</span>`;
-  document.getElementById('rDensKm').innerHTML=`${densKm}<span>×</span>`;
-  document.getElementById('rInfo').innerHTML=`<strong>▶ INÍCIO/FIM:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}<br><span style="color:#555">Estimativa linha reta: ${estKm.toFixed(1)}km · OSRM: ${voltaKm.toFixed(1)}km · ratio: ${ratio.toFixed(2)}x</span>`;
-  document.getElementById('rTag').innerHTML=`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 CIRCUITO VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`
-    +(warnDup?` <span class="rtag warn">⚠ ratio ${ratio.toFixed(1)}x — possível duplicação</span>`:'');
-  document.getElementById('result').classList.add('show');
-  document.getElementById('row-export').style.display='block';
-  st(`Circuito: ${voltaKm.toFixed(1)}km · área: ${areaKm2.toFixed(2)}km² · ${densKm}km/km² · ${viaRua?'OSRM':'estimativa'}`,'g');
+    document.getElementById('rVoltaKm').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
+    document.getElementById('rVoltaT').innerHTML=fmtT(voltaHr);
+    document.getElementById('rHLabel').textContent=`${horas}h de veiculação`;
+    document.getElementById('rVoltas').innerHTML=`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
+    document.getElementById('rTotalKm').innerHTML=`${(voltas*voltaKm).toFixed(1)}<span>km total</span>`;
+    document.getElementById('rArea').innerHTML=`${areaKm2.toFixed(2)}<span>km²</span>`;
+    document.getElementById('rPts').innerHTML=`${geomLL.length}<span>pts</span>`;
+    document.getElementById('rDens').innerHTML=`${densKm}<span>×</span>`;
+    document.getElementById('rInfo').innerHTML=`<strong>▶ INÍCIO/FIM:</strong> ${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)} &nbsp;·&nbsp; ${cliente} / ${campanha}`;
+    document.getElementById('rTag').innerHTML=`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 CIRCUITO VIA RUAS REAIS':'≈ ESTIMATIVA LINHA RETA'}</span>`;
+    document.getElementById('result').classList.add('show');
+    document.getElementById('export-row').classList.add('show');
+    cSt(`Circuito: ${voltaKm.toFixed(1)}km · ${fmtT(voltaHr)}/volta · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
+  });
 }
 
-// ── EXPORT GPX ───────────────────────────────────────────────
-function exportGPX() {
-  if (!routeLayer) { st('Gere a rota primeiro','r'); return; }
-  const cliente  = document.getElementById('iCliente').value || 'rota';
-  const campanha = document.getElementById('iCampanha').value || 'campanha';
-  const name     = `${cliente} — ${campanha}`.replace(/[^a-zA-Z0-9\s\-]/g,'');
-  const now      = new Date().toISOString();
+// ── EXPORT GPX ────────────────────────────────────────────────
+function exportGPX(){
+  if(!lastGeom||!lastGeom.length){cSt('Gere a rota primeiro','r');return;}
+  const cliente=document.getElementById('iCliente').value||'rota';
+  const campanha=document.getElementById('iCampanha').value||'campanha';
+  const name=`${cliente} — ${campanha}`;
+  const startISO=new Date().toISOString();
+  const startMs=Date.now();
+  const totalKm=distHaversine(lastGeom.map(p=>[p.lat,p.lng]))/1000;
+  const totalSec=Math.round((totalKm/SPD)*3600);
+  const msPerPt=Math.round((totalSec*1000)/lastGeom.length);
 
-  // Pega coordenadas da polyline desenhada no mapa
-  const latlngs  = routeLayer.getLatLngs();
-
-  let trkpts = '';
-  latlngs.forEach(pt => {
-    trkpts += `      <trkpt lat="${pt.lat.toFixed(6)}" lon="${pt.lng.toFixed(6)}">\n`;
-    trkpts += `        <time>${now}</time>\n`;
-    trkpts += `      </trkpt>\n`;
+  let trkpts='';
+  lastGeom.forEach((pt,i)=>{
+    const t=new Date(startMs+i*msPerPt).toISOString();
+    trkpts+=`      <trkpt lat="${pt.lat.toFixed(6)}" lon="${pt.lng.toFixed(6)}">\n        <time>${t}</time>\n      </trkpt>\n`;
   });
 
-  const gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="AUTOVISION Planejador de Rota"
-  xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata>
-    <name>${name}</name>
-    <time>${now}</time>
-  </metadata>
+  const gpx=`<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="AUTOVISION Planejador de Rota" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>${name}</name><time>${startISO}</time></metadata>
   <trk>
     <name>${name}</name>
     <trkseg>
@@ -510,20 +624,15 @@ ${trkpts}    </trkseg>
   </trk>
 </gpx>`;
 
-  const blob = new Blob([gpx], {type:'application/gpx+xml'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `autovision-${cliente}-${campanha}.gpx`.replace(/\s+/g,'-').toLowerCase();
+  const blob=new Blob([gpx],{type:'application/gpx+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`autovision-${cliente}-${campanha}.gpx`.replace(/\s+/g,'-').toLowerCase();
   a.click();
   URL.revokeObjectURL(url);
-  st('GPX exportado — importe em strava.com/upload','g');
+  cSt('GPX exportado com timestamps — importe em strava.com/upload','g');
 }
-
 </script>
-
-<div id="row-export" style="display:none;background:var(--bg);border-top:1px solid var(--border);padding:8px 12px;flex-shrink:0">
-  <button class="btn primary" style="width:100%;font-size:11px" onclick="exportGPX()">⬇ EXPORTAR GPX — IMPORTAR NO STRAVA</button>
-</div>
 </body>
 </html>
