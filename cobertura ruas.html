@@ -11,6 +11,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
+/* HEADER */
 #hdr{background:var(--bg);border-bottom:1px solid var(--border);padding:7px 12px;flex-shrink:0}
 #hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .logo{font-size:11px;letter-spacing:4px;color:var(--am);font-weight:bold}
@@ -21,45 +22,51 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
 input{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
 input:focus{border-color:var(--am)}
 
+/* TABS */
 #tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:9px 0;text-align:center;font-size:10px;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase}
 .tab.active{color:var(--am);border-bottom-color:var(--am);background:#0F0E00}
+.tab.has-data{color:var(--purple)}
+.tab.has-data.active{color:var(--am)}
 
-#tab-bairro,#tab-circuito{display:none;flex-direction:column;flex:1;overflow:hidden}
-#tab-bairro.show,#tab-circuito.show{display:flex}
+/* TAB PANELS */
+.tab-panel{display:none;flex-direction:column;flex:1;overflow:hidden}
+.tab-panel.show{display:flex}
 
+/* ROWS */
 .trow{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;align-items:center;flex-shrink:0;overflow-x:auto}
-
 #search-row{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;flex-shrink:0}
-#bairro-input,#cidade-input{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
-#bairro-input{flex:1}
-#bairro-input:focus,#cidade-input:focus{border-color:var(--am)}
-#cidade-input{width:120px}
+#bairro-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
+#bairro-input:focus{border-color:var(--am)}
+#cidade-input{width:120px;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
+#cidade-input:focus{border-color:var(--am)}
 
-#confirm-banner{display:none;background:#1A1500;border-bottom:1px solid #3A2A00;padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
-#confirm-banner.show{display:flex}
+/* BANNERS */
+.banner{display:none;border-bottom:1px solid;padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
+.banner.show{display:flex}
+#confirm-banner{background:#1A1500;border-color:#3A2A00}
 #confirm-name{font-size:11px;color:var(--am);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* PRONTO BANNER */
-#pronto-banner{display:none;background:#0A1A00;border-bottom:1px solid var(--green);padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
-#pronto-banner.show{display:flex}
+#pronto-banner{background:#001A00;border-color:#1A4A00}
 #pronto-info{font-size:11px;color:var(--green);flex:1}
 
+/* BUTTONS */
 .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
 .btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
 .btn.on-move{background:#001A1A;border-color:var(--cyan);color:var(--cyan)}
 .btn.on-del{background:#1A0000;border-color:var(--red);color:var(--red)}
 .btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
-.btn.green{background:#0A2A00;border-color:var(--green);color:var(--green);font-weight:bold}
+.btn.green{background:#001A00;border-color:var(--green);color:var(--green);font-weight:bold}
 .btn.confirm{background:#1A3A00;border-color:var(--green);color:var(--green)}
 .btn.cancel{background:#1A0000;border-color:var(--red);color:var(--red)}
 .btn.danger{border-color:#3A1010;color:#884444}
 .btn.sm{padding:5px 8px;font-size:13px}
-.btn.full{width:100%;font-size:11px;padding:9px}
+.btn.full{width:100%;font-size:11px;padding:10px;letter-spacing:2px}
 
-.map-wrap{flex:1;position:relative;overflow:hidden}
-#map-bairro,#map-circuito{height:100%;width:100%}
+/* MAP */
+.map-wrap{flex:1;min-height:0;overflow:hidden}
+.map-wrap>div{height:100%;width:100%}
 
+/* STATUS */
 .statusbar{background:var(--panel);border-top:1px solid var(--border);padding:5px 10px;font-size:10px;color:var(--muted);letter-spacing:1px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:6px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .dot.g{background:var(--green);box-shadow:0 0 5px var(--green)}
@@ -67,23 +74,27 @@ input:focus{border-color:var(--am)}
 .dot.r{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* RESULT — big and clean */
-#result{display:none;background:var(--panel);border-top:2px solid var(--am);padding:12px;flex-shrink:0}
-#result.show{display:block}
-.result-main{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
-.rl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
-.rv{font-size:22px;font-weight:bold;color:var(--purple)}
-.rv span{font-size:10px;color:var(--muted);margin-left:2px}
-.rv.or{color:var(--orange)}
-.verdict{background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px}
-.verdict strong{color:var(--am)}
-.rtag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:2px;letter-spacing:1px}
-.rtag.real{background:#0A1F0A;border:1px solid #1A4A1A;color:var(--green)}
-.rtag.est{background:#1A1200;border:1px solid #3A2A00;color:var(--orange)}
+/* DADOS TAB */
+#tab-dados-content{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
+.dados-empty{color:var(--muted);font-size:11px;text-align:center;margin-top:40px;letter-spacing:1px}
+.dados-section{background:var(--panel2);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.dados-section-title{font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--panel)}
+.dados-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.dado-cell{padding:12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dado-cell:nth-child(even){border-right:none}
+.dado-cell:nth-last-child(-n+2){border-bottom:none}
+.dado-label{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.dado-val{font-size:20px;font-weight:bold;color:var(--purple)}
+.dado-val span{font-size:10px;color:var(--muted);margin-left:2px}
+.dado-val.or{color:var(--orange)}
+.dado-val.gr{color:var(--green)}
+.dado-val.bl{color:#4A90FF}
+.verdict-box{background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:14px}
+.verdict-box p{font-size:12px;line-height:1.8;color:var(--text)}
+.verdict-box strong{color:var(--am)}
+.verdict-box .sub-info{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6}
 
-#export-row{display:none;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);flex-shrink:0}
-#export-row.show{display:block}
-
+/* VERTEX */
 .vx{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .vx.am{background:var(--am)}
 .vx.cy{background:var(--cyan);cursor:grab}
@@ -94,9 +105,10 @@ input:focus{border-color:var(--am)}
 </head>
 <body>
 
+<!-- FIXED HEADER -->
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.1</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.2</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -109,20 +121,22 @@ input:focus{border-color:var(--am)}
   </div>
 </div>
 
+<!-- TABS -->
 <div id="tabs">
   <div class="tab active" id="tab-btn-bairro"   onclick="showTab('bairro')">▣ BAIRRO</div>
   <div class="tab"        id="tab-btn-circuito" onclick="showTab('circuito')">⟳ CIRCUITO</div>
+  <div class="tab"        id="tab-btn-dados"    onclick="showTab('dados')">≡ DADOS</div>
 </div>
 
 <!-- ABA BAIRRO -->
-<div id="tab-bairro" class="show">
+<div id="tab-bairro" class="tab-panel show">
   <div id="search-row">
     <input id="bairro-input" placeholder="Nome do bairro"/>
     <input id="cidade-input" placeholder="Cidade, UF" value="Porto Alegre, RS"/>
     <button class="btn" onclick="buscarBairro()">BUSCAR</button>
   </div>
 
-  <div id="confirm-banner">
+  <div id="confirm-banner" class="banner">
     <div id="confirm-name"></div>
     <button class="btn confirm" onclick="confirmarBairro()">✓ USAR</button>
     <button class="btn cancel"  onclick="rejeitarBairro()">✕</button>
@@ -132,14 +146,14 @@ input:focus{border-color:var(--am)}
     <button class="btn on" id="bBtnAdd"  onclick="setBMode('add')">✚ Adicionar</button>
     <button class="btn"    id="bBtnMove" onclick="setBMode('move')">✎ Mover</button>
     <button class="btn"    id="bBtnDel"  onclick="setBMode('del')">✕ Remover</button>
-    <button class="btn danger"           onclick="limparBairro()">🗑</button>
+    <button class="btn danger" style="margin-left:auto" onclick="limparBairro()">🗑</button>
   </div>
 
   <div class="map-wrap"><div id="map-bairro"></div></div>
 
-  <div id="pronto-banner">
+  <div id="pronto-banner" class="banner">
     <div id="pronto-info"></div>
-    <button class="btn green" onclick="irParaCircuito()">▶ GERAR CIRCUITO</button>
+    <button class="btn green" onclick="showTab('circuito')">▶ IR PARA CIRCUITO</button>
   </div>
 
   <div class="statusbar">
@@ -149,14 +163,14 @@ input:focus{border-color:var(--am)}
 </div>
 
 <!-- ABA CIRCUITO -->
-<div id="tab-circuito">
+<div id="tab-circuito" class="tab-panel">
   <div class="trow">
-    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap">DENSIDADE</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap">DENS.</div>
     <button class="btn on" id="d1" onclick="setDensity(1)">🔵 Leve</button>
     <button class="btn"    id="d2" onclick="setDensity(2)">🟡 Médio</button>
     <button class="btn"    id="d3" onclick="setDensity(3)">🔴 Denso</button>
     <button class="btn primary" style="margin-left:auto" onclick="gerar()">▶ GERAR</button>
-    <button class="btn danger"  onclick="limparCircuito()">🗑</button>
+    <button class="btn danger" onclick="limparCircuito()">🗑</button>
   </div>
 
   <div class="map-wrap"><div id="map-circuito"></div></div>
@@ -165,51 +179,62 @@ input:focus{border-color:var(--am)}
     <div class="dot" id="cDot"></div>
     <span id="cSt">Defina o bairro e clique ▶ GERAR</span>
   </div>
+</div>
 
-  <div id="result">
-    <div class="result-main">
-      <div>
-        <div class="rl">1 volta completa</div>
-        <div class="rv" id="rKm">—<span>km</span></div>
-        <div class="rv" id="rT" style="font-size:16px;margin-top:2px">—</div>
-      </div>
-      <div>
-        <div class="rl" id="rHLabel">— h disponíveis</div>
-        <div class="rv or" id="rVoltas">—<span>voltas</span></div>
-        <div class="rv or" id="rTotalKm" style="font-size:16px;margin-top:2px">—<span>km cobertos</span></div>
+<!-- ABA DADOS -->
+<div id="tab-dados" class="tab-panel">
+  <div id="tab-dados-content">
+    <div class="dados-empty" id="dados-empty">Gere um circuito para ver os dados</div>
+
+    <div class="dados-section" id="dados-metricas" style="display:none">
+      <div class="dados-section-title">Métricas do Circuito</div>
+      <div class="dados-grid">
+        <div class="dado-cell"><div class="dado-label">1 volta</div><div class="dado-val" id="dKm">—<span>km</span></div></div>
+        <div class="dado-cell"><div class="dado-label">Tempo/volta</div><div class="dado-val" id="dT">—</div></div>
+        <div class="dado-cell"><div class="dado-label">Voltas em <span id="dHorasLabel">—</span>h</div><div class="dado-val or" id="dVoltas">—</div></div>
+        <div class="dado-cell"><div class="dado-label">km cobertos</div><div class="dado-val or" id="dTotalKm">—<span>km</span></div></div>
+        <div class="dado-cell"><div class="dado-label">Área bairro</div><div class="dado-val bl" id="dArea">—<span>km²</span></div></div>
+        <div class="dado-cell"><div class="dado-label">Cobertura est.</div><div class="dado-val gr" id="dCobertura">—<span>%</span></div></div>
       </div>
     </div>
-    <div class="verdict" id="rVerdict"></div>
-    <div id="rTag"></div>
-  </div>
 
-  <div id="export-row">
-    <button class="btn full primary" onclick="exportGPX()">⬇ EXPORTAR GPX — STRAVA</button>
+    <div class="verdict-box" id="dados-verdict" style="display:none">
+      <p id="dVerdictText"></p>
+      <div class="sub-info" id="dSubInfo"></div>
+    </div>
+
+    <div id="dados-export" style="display:none">
+      <button class="btn full primary" onclick="exportGPX()">⬇ EXPORTAR GPX — STRAVA</button>
+    </div>
   </div>
 </div>
 
 <script>
 const SPD = 15;
 
+// ── MAPS ──────────────────────────────────────────────────────
 const mapB = L.map('map-bairro',  {zoomControl:true, attributionControl:false});
 const mapC = L.map('map-circuito',{zoomControl:true, attributionControl:false});
-const TILES='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapB);
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapC);
 mapB.setView([-30.05,-51.17],13);
 mapC.setView([-30.05,-51.17],13);
 
+// ── STATE ─────────────────────────────────────────────────────
 let bPts=[],bMode='add',bPolyLayer=null,bVtx=[],gpsMkr=null;
 let pendingGeojson=null,pendingName='';
-let lastGeom=null;
+let lastGeom=null,lastData=null;
+let densityTarget=40;
 
 // ── TABS ──────────────────────────────────────────────────────
 function showTab(t){
-  ['bairro','circuito'].forEach(n=>{
+  ['bairro','circuito','dados'].forEach(n=>{
     document.getElementById('tab-'+n).classList.toggle('show',n===t);
     document.getElementById('tab-btn-'+n).classList.toggle('active',n===t);
   });
-  setTimeout(()=>(t==='bairro'?mapB:mapC).invalidateSize(),60);
+  if(t==='bairro')   setTimeout(()=>mapB.invalidateSize(),60);
+  if(t==='circuito') setTimeout(()=>mapC.invalidateSize(),60);
 }
 
 // ── STATUS ────────────────────────────────────────────────────
@@ -232,18 +257,12 @@ function polyAreaKm2(poly){
 function updateAreaBadge(){
   const a=bPts.length>=3?polyAreaKm2(bPts):0;
   document.getElementById('area-badge').textContent=a>0?`▣ ${a.toFixed(2)} km²`:'';
-  // Mostra/esconde botão pronto
   if(a>0){
-    document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² definidos`;
+    document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² definidos — pronto para gerar`;
     document.getElementById('pronto-banner').classList.add('show');
   } else {
     document.getElementById('pronto-banner').classList.remove('show');
   }
-}
-
-function irParaCircuito(){
-  showTab('circuito');
-  gerar();
 }
 
 // ── GPS ───────────────────────────────────────────────────────
@@ -288,7 +307,7 @@ mapB.on('click',e=>{
   if(bMode!=='add')return;
   bPts.push([e.latlng.lat,e.latlng.lng]);
   bRedraw();
-  bSt(`${bPts.length} pontos — continue ou clique ▶ GERAR CIRCUITO`,'');
+  bSt(`${bPts.length} pontos`,'');
 });
 
 function limparBairro(){
@@ -296,8 +315,7 @@ function limparBairro(){
   if(bPolyLayer)mapB.removeLayer(bPolyLayer);
   bPolyLayer=null;bVtx.forEach(m=>mapB.removeLayer(m));bVtx=[];
   document.getElementById('confirm-banner').classList.remove('show');
-  updateAreaBadge();
-  bSt('Limpo','');setBMode('add');
+  updateAreaBadge();bSt('Limpo','');setBMode('add');
 }
 
 // ── BUSCA ─────────────────────────────────────────────────────
@@ -308,7 +326,7 @@ async function buscarBairro(){
   bSt(`Buscando "${q}"...`,'y');
   document.getElementById('confirm-banner').classList.remove('show');
   try{
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', '+c)}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.1'}});
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', '+c)}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.2'}});
     const data=await res.json();
     const item=data.find(d=>['suburb','neighbourhood','quarter','residential'].includes(d.type))||data[0];
     if(!item){bSt('Não encontrado — tente outro nome','r');return;}
@@ -347,7 +365,6 @@ function rejeitarBairro(){
 }
 
 // ── DENSITY ───────────────────────────────────────────────────
-let densityTarget=40; // número alvo de waypoints para OSRM trip
 function setDensity(d){
   [1,2,3].forEach(i=>document.getElementById('d'+i).className='btn'+(i===d?' on':''));
   densityTarget=d===1?25:d===2?40:60;
@@ -364,15 +381,12 @@ function scanLine(poly,lat){
   return xs.sort((a,b)=>a-b);
 }
 
-// Grade controlada: gera exatamente N pontos bem distribuídos dentro do polígono
-function gradeControlada(poly, n){
+function gradeControlada(poly,n){
   const lats=poly.map(p=>p[0]);
   const[loLat,hiLat]=[Math.min(...lats),Math.max(...lats)];
-  // Quantas linhas: sqrt(n) arredondado
   const nRows=Math.max(3,Math.round(Math.sqrt(n*1.5)));
   const stepLat=(hiLat-loLat)/nRows;
-  const allPts=[];
-  let ltr=true;
+  const all=[];let ltr=true;
   for(let i=0;i<=nRows;i++){
     const lat=loLat+i*stepLat;
     const xs=scanLine(poly,lat);
@@ -382,12 +396,11 @@ function gradeControlada(poly, n){
       const stepLon=(xs[j+1]-xs[j])/nCols;
       for(let k=0;k<=nCols;k++)row.push([lat,xs[j]+k*stepLon]);
     }
-    if(row.length){if(!ltr)row.reverse();allPts.push(...row);ltr=!ltr;}
+    if(row.length){if(!ltr)row.reverse();all.push(...row);ltr=!ltr;}
   }
-  // Subsample para exatamente N pontos
-  if(allPts.length<=n)return allPts;
-  const step=Math.floor(allPts.length/n);
-  return allPts.filter((_,i)=>i%step===0).slice(0,n);
+  if(all.length<=n)return all;
+  const step=Math.floor(all.length/n);
+  return all.filter((_,i)=>i%step===0).slice(0,n);
 }
 
 function haversine(a,b){
@@ -403,11 +416,9 @@ function fmtT(h){
   return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;
 }
 
-// OSRM /trip — fecha circuito automaticamente, máx 100 pts
 async function osrmTrip(pts){
   const coords=pts.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
-  const url=`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson`;
-  const r=await fetch(url,{signal:AbortSignal.timeout(30000)});
+  const r=await fetch(`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson`,{signal:AbortSignal.timeout(30000)});
   if(!r.ok)throw new Error('OSRM '+r.status);
   const d=await r.json();
   if(d.code!=='Ok')throw new Error(d.code);
@@ -416,19 +427,15 @@ async function osrmTrip(pts){
 
 // ── ANIMAÇÃO ──────────────────────────────────────────────────
 function animateRoute(geomLL,onDone){
-  // Limpa rota anterior
-  mapC.eachLayer(l=>{if(l._isRoute||l._isStart)mapC.removeLayer(l);});
-
+  mapC.eachLayer(l=>{if(l._av)mapC.removeLayer(l);});
   const line=L.polyline([],{color:'#C084FC',weight:3,opacity:.9}).addTo(mapC);
-  line._isRoute=true;
+  line._av=true;
   lastGeom=geomLL;
-
-  const total=geomLL.length;
-  const step=Math.max(1,Math.floor(total/150));
+  const step=Math.max(1,Math.floor(geomLL.length/150));
   let i=0;
   function tick(){
-    if(i>=total){if(onDone)onDone();return;}
-    for(let k=0;k<step&&i<total;k++,i++)line.addLatLng(geomLL[i]);
+    if(i>=geomLL.length){if(onDone)onDone();return;}
+    for(let k=0;k<step&&i<geomLL.length;k++,i++)line.addLatLng(geomLL[i]);
     requestAnimationFrame(tick);
   }
   tick();
@@ -437,28 +444,24 @@ function animateRoute(geomLL,onDone){
 // ── GERAR ─────────────────────────────────────────────────────
 async function gerar(){
   if(bPts.length<3){cSt('Defina o bairro na aba BAIRRO primeiro','r');showTab('bairro');return;}
-
   const horas=parseFloat(document.getElementById('iHoras').value)||3;
   const cliente=document.getElementById('iCliente').value||'—';
   const campanha=document.getElementById('iCampanha').value||'—';
   const areaKm2=polyAreaKm2(bPts);
 
-  // Sincroniza mapa
   const bounds=L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1])));
   mapC.fitBounds(bounds,{padding:[20,20]});
 
-  // Perímetro de referência
-  mapC.eachLayer(l=>{if(l._isPerim)mapC.removeLayer(l);});
+  // Perímetro referência
+  mapC.eachLayer(l=>{if(l._av)mapC.removeLayer(l);});
   const perim=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.05,dashArray:'4,4'}).addTo(mapC);
-  perim._isPerim=true;
+  perim._av=true;
 
   cSt(`Calculando grade (${densityTarget} pts)...`,'y');
-
-  // Grade controlada com número alvo de pontos
   const waypoints=gradeControlada(bPts,densityTarget);
   if(waypoints.length<3){cSt('Área muito pequena','r');return;}
 
-  cSt(`Calculando circuito via ruas reais (${waypoints.length} pts)...`,'y');
+  cSt(`Calculando circuito (${waypoints.length} pts)...`,'y');
 
   let geomLL,viaRua=true,distM;
   try{
@@ -466,53 +469,72 @@ async function gerar(){
     distM=r.distM;
     geomLL=r.geom.map(p=>L.latLng(p[0],p[1]));
   }catch(e){
-    console.error(e);
-    viaRua=false;
-    // fallback: haversine em ordem
+    console.error(e);viaRua=false;
     const pts=[...waypoints,waypoints[0]];
     distM=distH(pts);
     geomLL=pts.map(p=>L.latLng(p[0],p[1]));
   }
 
-  // Ponto de início
-  mapC.eachLayer(l=>{if(l._isStart)mapC.removeLayer(l);});
   const startMkr=L.circleMarker(geomLL[0],{radius:8,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2}).addTo(mapC).bindPopup('▶ INÍCIO / FIM');
-  startMkr._isStart=true;
+  startMkr._av=true;
 
-  cSt('Desenhando circuito...','y');
+  cSt('Desenhando...','y');
 
   animateRoute(geomLL,()=>{
     const voltaKm=viaRua?(distM/1000):(distH(waypoints.map(p=>[p[0],p[1]]))/1000);
     const voltaHr=voltaKm/SPD;
     const voltas=Math.floor(horas/voltaHr);
-    const totalKm=(voltas*voltaKm).toFixed(1);
-
-    document.getElementById('rKm').innerHTML=`${voltaKm.toFixed(1)}<span>km</span>`;
-    document.getElementById('rT').innerHTML=fmtT(voltaHr);
-    document.getElementById('rHLabel').textContent=`${horas}h disponíveis`;
-    document.getElementById('rVoltas').innerHTML=`${voltas}<span>volta${voltas!==1?'s':''}</span>`;
-    document.getElementById('rTotalKm').innerHTML=`${totalKm}<span>km cobertos</span>`;
-
-    // Veredito simples
+    const totalKm=voltas*voltaKm;
     const pct=Math.min(100,Math.round((voltaKm/(areaKm2*12))*100));
-    document.getElementById('rVerdict').innerHTML=
-      `<strong>${cliente||'Campanha'} · ${campanha}</strong><br>`+
-      `Em <strong>${horas}h</strong> você consegue dar <strong>${voltas} volta${voltas!==1?'s':''}</strong> completa${voltas!==1?'s':''} pelo bairro.<br>`+
-      `Cobertura estimada: <strong>~${pct}% das ruas</strong> a cada passagem.`;
 
-    document.getElementById('rTag').innerHTML=`<span class="rtag ${viaRua?'real':'est'}">${viaRua?'🛣 VIA RUAS REAIS':'≈ ESTIMATIVA'}</span>`;
-    document.getElementById('result').classList.add('show');
-    document.getElementById('export-row').classList.add('show');
-    cSt(`${voltaKm.toFixed(1)}km por volta · ${fmtT(voltaHr)} · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
+    // Salva dados
+    lastData={voltaKm,voltaHr,voltas,totalKm,areaKm2,pct,horas,cliente,campanha,viaRua,waypoints:waypoints.length};
+
+    // Popula aba DADOS
+    populaDados(lastData);
+
+    // Marca aba dados com indicador
+    document.getElementById('tab-btn-dados').classList.add('has-data');
+
+    cSt(`${voltaKm.toFixed(1)}km/volta · ${fmtT(voltaHr)} · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
   });
+}
+
+function populaDados(d){
+  document.getElementById('dados-empty').style.display='none';
+  document.getElementById('dados-metricas').style.display='block';
+  document.getElementById('dados-verdict').style.display='block';
+  document.getElementById('dados-export').style.display='block';
+
+  document.getElementById('dKm').innerHTML=`${d.voltaKm.toFixed(1)}<span>km</span>`;
+  document.getElementById('dT').innerHTML=fmtT(d.voltaHr);
+  document.getElementById('dHorasLabel').textContent=d.horas;
+  document.getElementById('dVoltas').innerHTML=`${d.voltas}<span>volta${d.voltas!==1?'s':''}</span>`;
+  document.getElementById('dTotalKm').innerHTML=`${d.totalKm.toFixed(1)}<span>km</span>`;
+  document.getElementById('dArea').innerHTML=`${d.areaKm2.toFixed(2)}<span>km²</span>`;
+  document.getElementById('dCobertura').innerHTML=`~${d.pct}<span>%</span>`;
+
+  const c=d.cliente!=='—'?d.cliente:'Campanha';
+  const camp=d.campanha!=='—'?` · ${d.campanha}`:'';
+  document.getElementById('dVerdictText').innerHTML=
+    `<strong>${c}${camp}</strong><br>`+
+    `Em <strong>${d.horas}h</strong> você consegue dar <strong>${d.voltas} volta${d.voltas!==1?'s':''} completa${d.voltas!==1?'s':''}</strong> pelo bairro.<br>`+
+    `Cada volta tem <strong>${d.voltaKm.toFixed(1)}km</strong> e leva <strong>${fmtT(d.voltaHr)}</strong>.`;
+
+  document.getElementById('dSubInfo').innerHTML=
+    `Área do bairro: ${d.areaKm2.toFixed(2)} km² · Cobertura estimada por volta: ~${d.pct}% das ruas<br>`+
+    `Velocidade base: ${SPD} km/h · Pontos de rota: ${d.waypoints} · ${d.viaRua?'Via ruas reais (OSRM)':'Estimativa linha reta'}`;
 }
 
 // ── LIMPAR CIRCUITO ───────────────────────────────────────────
 function limparCircuito(){
-  mapC.eachLayer(l=>{if(l._isRoute||l._isStart||l._isPerim)mapC.removeLayer(l);});
-  lastGeom=null;
-  document.getElementById('result').classList.remove('show');
-  document.getElementById('export-row').classList.remove('show');
+  mapC.eachLayer(l=>{if(l._av)mapC.removeLayer(l);});
+  lastGeom=null;lastData=null;
+  document.getElementById('dados-empty').style.display='block';
+  document.getElementById('dados-metricas').style.display='none';
+  document.getElementById('dados-verdict').style.display='none';
+  document.getElementById('dados-export').style.display='none';
+  document.getElementById('tab-btn-dados').classList.remove('has-data');
   cSt('Limpo','');
 }
 
@@ -525,8 +547,7 @@ function exportGPX(){
   const startMs=Date.now();
   const pts=lastGeom.map(p=>[p.lat,p.lng]);
   const totalKm=distH(pts)/1000;
-  const totalSec=(totalKm/SPD)*3600;
-  const msPerPt=(totalSec*1000)/pts.length;
+  const msPerPt=(totalKm/SPD)*3600000/pts.length;
   let trkpts='';
   pts.forEach((pt,i)=>{
     const t=new Date(startMs+i*msPerPt).toISOString();
