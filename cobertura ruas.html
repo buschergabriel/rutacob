@@ -99,7 +99,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.3</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.4</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -151,7 +151,6 @@ input:focus{border-color:var(--am)}
 <div id="tab-circuito" class="tab-panel">
   <div class="trow">
     <button class="btn on"     id="cBtnAdd"   onclick="setCMode('add')">✚ Ponto</button>
-    <button class="btn"        id="cBtnNode"  onclick="setCMode('node')">⊕ Nós OSM</button>
     <button class="btn"        id="cBtnStart" onclick="setCMode('start')">⊙ Início</button>
     <button class="btn"        id="cBtnDel"   onclick="setCMode('del')">✕ Remover</button>
     <button class="btn primary" style="margin-left:auto" onclick="gerarRota()">▶ GERAR</button>
@@ -370,18 +369,15 @@ function rejeitarBairro(){
 // ── CIRCUITO MODE ─────────────────────────────────────────────
 function setCMode(m){
   cMode=m;
-  ['cBtnAdd','cBtnNode','cBtnStart','cBtnDel'].forEach(id=>document.getElementById(id).className='btn');
-  const cls={add:'on',node:'on-node',start:'on-start',del:'on-del'};
-  document.getElementById({add:'cBtnAdd',node:'cBtnNode',start:'cBtnStart',del:'cBtnDel'}[m]).className='btn '+cls[m];
+  ['cBtnAdd','cBtnStart','cBtnDel'].forEach(id=>document.getElementById(id).className='btn');
+  const cls={add:'on',start:'on-start',del:'on-del'};
+  document.getElementById({add:'cBtnAdd',start:'cBtnStart',del:'cBtnDel'}[m]).className='btn '+cls[m];
   const hints={
     add:'Toque no mapa para adicionar waypoint à rota',
-    node:'Carregando nós OSM... toque num nó roxo para adicionar à rota',
     start:'Toque no mapa para definir o ponto de início',
-    del:'Toque num waypoint numerado para removê-lo (segure para reordenar)'
+    del:'Toque num waypoint numerado para removê-lo — toque em outro modo para reordenar'
   };
   cSt(hints[m],'');
-  if(m==='node') carregarNos();
-  else {nodeMarkers.forEach(mk=>mapC.removeLayer(mk));nodeMarkers=[];}
 }
 
 // ── NÓS OSM via Overpass ──────────────────────────────────────
@@ -504,18 +500,17 @@ async function gerarRota(){
   let geomLL,viaRua=true,distM;
   try{
     const coords=allPts.map(p=>`${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
-    const url=`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson`;
+    const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
     const r=await fetch(url,{signal:AbortSignal.timeout(30000)});
     if(!r.ok)throw new Error(r.status);
     const d=await r.json();
     if(d.code!=='Ok')throw new Error(d.code);
-    distM=d.trips[0].distance;
-    geomLL=d.trips[0].geometry.coordinates.map(c=>L.latLng(c[1],c[0]));
+    distM=d.routes[0].distance;
+    geomLL=d.routes[0].geometry.coordinates.map(c=>L.latLng(c[1],c[0]));
   }catch(e){
     console.error(e);viaRua=false;
-    const pts=[...allPts,allPts[0]];
-    distM=0;for(let i=0;i<pts.length-1;i++)distM+=haversine([pts[i].lat,pts[i].lng],[pts[i+1].lat,pts[i+1].lng]);
-    geomLL=pts.map(p=>L.latLng(p.lat,p.lng));
+    distM=0;for(let i=0;i<allPts.length-1;i++)distM+=haversine([allPts[i].lat,allPts[i].lng],[allPts[i+1].lat,allPts[i+1].lng]);
+    geomLL=allPts.map(p=>L.latLng(p.lat,p.lng));
   }
 
   // Desenha rota
