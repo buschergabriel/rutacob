@@ -99,7 +99,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.4</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.5</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -223,8 +223,22 @@ function showTab(t){
     document.getElementById('tab-'+n).classList.toggle('show',n===t);
     document.getElementById('tab-btn-'+n).classList.toggle('active',n===t);
   });
-  if(t==='bairro')   setTimeout(()=>mapB.invalidateSize(),60);
-  if(t==='circuito') setTimeout(()=>mapC.invalidateSize(),60);
+  if(t==='bairro') setTimeout(()=>mapB.invalidateSize(),60);
+  if(t==='circuito') setTimeout(()=>{
+    mapC.invalidateSize();
+    sincronizarPerimetro();
+  },60);
+}
+
+function sincronizarPerimetro(){
+  // Remove perimetro antigo
+  if(perimRefL){mapC.removeLayer(perimRefL);perimRefL=null;}
+  if(bPts.length<3) return;
+  // Desenha perimetro do bairro no mapa circuito
+  perimRefL=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.05,dashArray:'4,4'}).addTo(mapC);
+  // Centraliza no bairro
+  const bounds=L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1])));
+  mapC.fitBounds(bounds,{padding:[20,20]});
 }
 
 // ── STATUS ────────────────────────────────────────────────────
