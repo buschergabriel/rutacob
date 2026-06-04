@@ -10,8 +10,6 @@
 :root{--am:#F5C800;--bg:#0A0A0A;--panel:#111;--panel2:#161616;--border:#2A2A2A;--text:#E0E0E0;--muted:#555;--green:#4CAF50;--orange:#F5A623;--purple:#C084FC;--red:#FF4444;--cyan:#00CCCC}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-
-/* HEADER */
 #hdr{background:var(--bg);border-bottom:1px solid var(--border);padding:7px 12px;flex-shrink:0}
 #hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .logo{font-size:11px;letter-spacing:4px;color:var(--am);font-weight:bold}
@@ -21,94 +19,87 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
 .il{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
 input{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:5px 7px;border-radius:2px;width:100%;outline:none}
 input:focus{border-color:var(--am)}
-
-/* TABS */
 #tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:9px 0;text-align:center;font-size:10px;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase}
 .tab.active{color:var(--am);border-bottom-color:var(--am);background:#0F0E00}
-.tab.has-data{color:var(--purple)}
-.tab.has-data.active{color:var(--am)}
-
-/* TAB PANELS */
+.tab.ready{color:var(--purple)}
+.tab.ready.active{color:var(--am)}
 .tab-panel{display:none;flex-direction:column;flex:1;overflow:hidden}
 .tab-panel.show{display:flex}
-
-/* ROWS */
 .trow{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;align-items:center;flex-shrink:0;overflow-x:auto}
 #search-row{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;gap:6px;flex-shrink:0}
-#bairro-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
-#bairro-input:focus{border-color:var(--am)}
-#cidade-input{width:120px;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
-#cidade-input:focus{border-color:var(--am)}
-
-/* BANNERS */
+#bairro-input,#cidade-input{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;border-radius:2px;outline:none}
+#bairro-input{flex:1}#bairro-input:focus,#cidade-input:focus{border-color:var(--am)}
+#cidade-input{width:120px}
 .banner{display:none;border-bottom:1px solid;padding:8px 12px;flex-shrink:0;gap:8px;align-items:center}
 .banner.show{display:flex}
 #confirm-banner{background:#1A1500;border-color:#3A2A00}
 #confirm-name{font-size:11px;color:var(--am);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #pronto-banner{background:#001A00;border-color:#1A4A00}
 #pronto-info{font-size:11px;color:var(--green);flex:1}
-
-/* BUTTONS */
 .btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase}
 .btn.on{background:#1A1500;border-color:var(--am);color:var(--am)}
 .btn.on-move{background:#001A1A;border-color:var(--cyan);color:var(--cyan)}
 .btn.on-del{background:#1A0000;border-color:var(--red);color:var(--red)}
+.btn.on-start{background:#001A1A;border-color:var(--green);color:var(--green)}
+.btn.on-node{background:#0D0020;border-color:var(--purple);color:var(--purple)}
 .btn.primary{background:var(--am);border-color:var(--am);color:#000;font-weight:bold}
 .btn.green{background:#001A00;border-color:var(--green);color:var(--green);font-weight:bold}
 .btn.confirm{background:#1A3A00;border-color:var(--green);color:var(--green)}
 .btn.cancel{background:#1A0000;border-color:var(--red);color:var(--red)}
 .btn.danger{border-color:#3A1010;color:#884444}
-.btn.sm{padding:5px 8px;font-size:13px}
+.btn.sm{padding:5px 8px;font-size:12px}
 .btn.full{width:100%;font-size:11px;padding:10px;letter-spacing:2px}
-
-/* MAP */
 .map-wrap{flex:1;min-height:0;overflow:hidden}
 .map-wrap>div{height:100%;width:100%}
-
-/* STATUS */
 .statusbar{background:var(--panel);border-top:1px solid var(--border);padding:5px 10px;font-size:10px;color:var(--muted);letter-spacing:1px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:6px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .dot.g{background:var(--green);box-shadow:0 0 5px var(--green)}
 .dot.y{background:var(--am);box-shadow:0 0 5px var(--am);animation:pulse 1s infinite}
 .dot.r{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-/* DADOS TAB */
-#tab-dados-content{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
+/* DADOS */
+#tab-dados-content{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:12px}
 .dados-empty{color:var(--muted);font-size:11px;text-align:center;margin-top:40px;letter-spacing:1px}
-.dados-section{background:var(--panel2);border:1px solid var(--border);border-radius:3px;overflow:hidden}
-.dados-section-title{font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--panel)}
-.dados-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.dado-cell{padding:12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
-.dado-cell:nth-child(even){border-right:none}
-.dado-cell:nth-last-child(-n+2){border-bottom:none}
-.dado-label{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
-.dado-val{font-size:20px;font-weight:bold;color:var(--purple)}
-.dado-val span{font-size:10px;color:var(--muted);margin-left:2px}
-.dado-val.or{color:var(--orange)}
-.dado-val.gr{color:var(--green)}
-.dado-val.bl{color:#4A90FF}
-.verdict-box{background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:14px}
+.d-section{background:var(--panel2);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.d-title{font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:7px 12px;border-bottom:1px solid var(--border);background:var(--panel)}
+.d-grid{display:grid;grid-template-columns:1fr 1fr}
+.d-cell{padding:11px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.d-cell:nth-child(even){border-right:none}
+.d-cell:nth-last-child(-n+2){border-bottom:none}
+.d-lbl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+.d-val{font-size:19px;font-weight:bold;color:var(--purple)}
+.d-val span{font-size:10px;color:var(--muted);margin-left:2px}
+.d-val.or{color:var(--orange)}.d-val.gr{color:var(--green)}.d-val.bl{color:#4A90FF}
+.verdict-box{background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:13px}
 .verdict-box p{font-size:12px;line-height:1.8;color:var(--text)}
 .verdict-box strong{color:var(--am)}
-.verdict-box .sub-info{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6}
-
-/* VERTEX */
+.verdict-box .sub{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;border-top:1px solid var(--border);padding-top:8px}
+/* WAYPOINT markers */
+.wp-num{background:var(--purple);color:#fff;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.7);cursor:pointer}
+.wp-num.start{background:var(--green)}
+.wp-num.del-mode{background:var(--red);cursor:pointer}
+/* node dots */
+.node-dot{width:8px;height:8px;border-radius:50%;background:rgba(192,132,252,0.5);border:1px solid var(--purple);cursor:pointer}
+.node-dot:hover{background:var(--purple)}
+/* bairro vx */
 .vx{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
-.vx.am{background:var(--am)}
-.vx.cy{background:var(--cyan);cursor:grab}
-.vx.rd{background:var(--red);cursor:pointer}
+.vx.am{background:var(--am)}.vx.cy{background:var(--cyan);cursor:grab}.vx.rd{background:var(--red);cursor:pointer}
 .gps-dot{width:13px;height:13px;border-radius:50%;background:#4A90FF;border:2px solid #fff;box-shadow:0 0 7px #4A90FF}
 #area-badge{font-size:9px;color:var(--muted);letter-spacing:1px}
+/* reorder popup */
+#reorder-popup{display:none;position:fixed;bottom:80px;left:12px;right:12px;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:12px;z-index:9999}
+#reorder-popup.show{display:block}
+#reorder-popup .rp-title{font-size:10px;color:var(--am);letter-spacing:2px;margin-bottom:10px}
+#reorder-popup .rp-input{display:flex;gap:8px;align-items:center}
+#reorder-popup input{width:60px;text-align:center;font-size:16px}
 </style>
 </head>
 <body>
 
-<!-- FIXED HEADER -->
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.2</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.3</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -121,7 +112,6 @@ input:focus{border-color:var(--am)}
   </div>
 </div>
 
-<!-- TABS -->
 <div id="tabs">
   <div class="tab active" id="tab-btn-bairro"   onclick="showTab('bairro')">▣ BAIRRO</div>
   <div class="tab"        id="tab-btn-circuito" onclick="showTab('circuito')">⟳ CIRCUITO</div>
@@ -135,97 +125,98 @@ input:focus{border-color:var(--am)}
     <input id="cidade-input" placeholder="Cidade, UF" value="Porto Alegre, RS"/>
     <button class="btn" onclick="buscarBairro()">BUSCAR</button>
   </div>
-
   <div id="confirm-banner" class="banner">
     <div id="confirm-name"></div>
     <button class="btn confirm" onclick="confirmarBairro()">✓ USAR</button>
     <button class="btn cancel"  onclick="rejeitarBairro()">✕</button>
   </div>
-
   <div class="trow">
     <button class="btn on" id="bBtnAdd"  onclick="setBMode('add')">✚ Adicionar</button>
     <button class="btn"    id="bBtnMove" onclick="setBMode('move')">✎ Mover</button>
     <button class="btn"    id="bBtnDel"  onclick="setBMode('del')">✕ Remover</button>
+    <button class="btn sm" onclick="exportBairro()" title="Exportar perímetro">⬇ GeoJSON</button>
+    <button class="btn sm" onclick="importBairroClick()" title="Importar perímetro">⬆ GeoJSON</button>
+    <input type="file" id="importFile" accept=".geojson,.json" style="display:none" onchange="importBairro(event)"/>
     <button class="btn danger" style="margin-left:auto" onclick="limparBairro()">🗑</button>
   </div>
-
   <div class="map-wrap"><div id="map-bairro"></div></div>
-
   <div id="pronto-banner" class="banner">
     <div id="pronto-info"></div>
     <button class="btn green" onclick="showTab('circuito')">▶ IR PARA CIRCUITO</button>
   </div>
-
-  <div class="statusbar">
-    <div class="dot" id="bDot"></div>
-    <span id="bSt">Busque um bairro para começar</span>
-  </div>
+  <div class="statusbar"><div class="dot" id="bDot"></div><span id="bSt">Busque um bairro para começar</span></div>
 </div>
 
 <!-- ABA CIRCUITO -->
 <div id="tab-circuito" class="tab-panel">
   <div class="trow">
-    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap">DENS.</div>
-    <button class="btn on" id="d1" onclick="setDensity(1)">🔵 Leve</button>
-    <button class="btn"    id="d2" onclick="setDensity(2)">🟡 Médio</button>
-    <button class="btn"    id="d3" onclick="setDensity(3)">🔴 Denso</button>
-    <button class="btn primary" style="margin-left:auto" onclick="gerar()">▶ GERAR</button>
-    <button class="btn danger" onclick="limparCircuito()">🗑</button>
+    <button class="btn on"     id="cBtnAdd"   onclick="setCMode('add')">✚ Ponto</button>
+    <button class="btn"        id="cBtnNode"  onclick="setCMode('node')">⊕ Nós OSM</button>
+    <button class="btn"        id="cBtnStart" onclick="setCMode('start')">⊙ Início</button>
+    <button class="btn"        id="cBtnDel"   onclick="setCMode('del')">✕ Remover</button>
+    <button class="btn primary" style="margin-left:auto" onclick="gerarRota()">▶ GERAR</button>
+    <button class="btn danger"  onclick="limparCircuito()">🗑</button>
   </div>
-
   <div class="map-wrap"><div id="map-circuito"></div></div>
-
-  <div class="statusbar">
-    <div class="dot" id="cDot"></div>
-    <span id="cSt">Defina o bairro e clique ▶ GERAR</span>
-  </div>
+  <div class="statusbar"><div class="dot" id="cDot"></div><span id="cSt">Defina waypoints e clique ▶ GERAR</span></div>
 </div>
 
 <!-- ABA DADOS -->
 <div id="tab-dados" class="tab-panel">
   <div id="tab-dados-content">
     <div class="dados-empty" id="dados-empty">Gere um circuito para ver os dados</div>
-
-    <div class="dados-section" id="dados-metricas" style="display:none">
-      <div class="dados-section-title">Métricas do Circuito</div>
-      <div class="dados-grid">
-        <div class="dado-cell"><div class="dado-label">1 volta</div><div class="dado-val" id="dKm">—<span>km</span></div></div>
-        <div class="dado-cell"><div class="dado-label">Tempo/volta</div><div class="dado-val" id="dT">—</div></div>
-        <div class="dado-cell"><div class="dado-label">Voltas em <span id="dHorasLabel">—</span>h</div><div class="dado-val or" id="dVoltas">—</div></div>
-        <div class="dado-cell"><div class="dado-label">km cobertos</div><div class="dado-val or" id="dTotalKm">—<span>km</span></div></div>
-        <div class="dado-cell"><div class="dado-label">Área bairro</div><div class="dado-val bl" id="dArea">—<span>km²</span></div></div>
-        <div class="dado-cell"><div class="dado-label">Cobertura est.</div><div class="dado-val gr" id="dCobertura">—<span>%</span></div></div>
+    <div class="d-section" id="d-metricas" style="display:none">
+      <div class="d-title">Métricas do Circuito</div>
+      <div class="d-grid">
+        <div class="d-cell"><div class="d-lbl">1 volta</div><div class="d-val" id="dKm">—<span>km</span></div></div>
+        <div class="d-cell"><div class="d-lbl">Tempo/volta</div><div class="d-val" id="dT">—</div></div>
+        <div class="d-cell"><div class="d-lbl">Voltas disponíveis</div><div class="d-val or" id="dVoltas">—</div></div>
+        <div class="d-cell"><div class="d-lbl">km cobertos</div><div class="d-val or" id="dTKm">—<span>km</span></div></div>
+        <div class="d-cell"><div class="d-lbl">Área bairro</div><div class="d-val bl" id="dArea">—<span>km²</span></div></div>
+        <div class="d-cell"><div class="d-lbl">Cobertura est.</div><div class="d-val gr" id="dCob">—<span>%</span></div></div>
       </div>
     </div>
-
-    <div class="verdict-box" id="dados-verdict" style="display:none">
+    <div class="verdict-box" id="d-verdict" style="display:none">
       <p id="dVerdictText"></p>
-      <div class="sub-info" id="dSubInfo"></div>
+      <div class="sub" id="dSub"></div>
     </div>
-
-    <div id="dados-export" style="display:none">
+    <div id="d-export" style="display:none">
       <button class="btn full primary" onclick="exportGPX()">⬇ EXPORTAR GPX — STRAVA</button>
     </div>
   </div>
 </div>
 
-<script>
-const SPD = 15;
+<!-- REORDER POPUP -->
+<div id="reorder-popup">
+  <div class="rp-title">MOVER PONTO <span id="rp-from"></span> PARA POSIÇÃO:</div>
+  <div class="rp-input">
+    <input type="number" id="rp-pos" min="1"/>
+    <button class="btn primary" onclick="confirmarReorder()">OK</button>
+    <button class="btn cancel"  onclick="fecharReorder()">✕</button>
+  </div>
+</div>
 
-// ── MAPS ──────────────────────────────────────────────────────
-const mapB = L.map('map-bairro',  {zoomControl:true, attributionControl:false});
-const mapC = L.map('map-circuito',{zoomControl:true, attributionControl:false});
-const TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+<script>
+const SPD=15;
+const mapB=L.map('map-bairro',  {zoomControl:true,attributionControl:false});
+const mapC=L.map('map-circuito',{zoomControl:true,attributionControl:false});
+const TILES='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapB);
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapC);
 mapB.setView([-30.05,-51.17],13);
 mapC.setView([-30.05,-51.17],13);
 
-// ── STATE ─────────────────────────────────────────────────────
-let bPts=[],bMode='add',bPolyLayer=null,bVtx=[],gpsMkr=null;
-let pendingGeojson=null,pendingName='';
+// STATE
+let bPts=[],bMode='add',bPolyL=null,bVtx=[],gpsMkr=null;
+let pendingGeo=null,pendingName='';
+let cMode='add',startPt=null,startMkr=null;
+let waypoints=[]; // [{lat,lng}] in order
+let wpMarkers=[];
+let nodeMarkers=[];
+let routeLayer=null;
 let lastGeom=null,lastData=null;
-let densityTarget=40;
+let reorderIdx=null;
+let perimRefL=null;
 
 // ── TABS ──────────────────────────────────────────────────────
 function showTab(t){
@@ -238,39 +229,29 @@ function showTab(t){
 }
 
 // ── STATUS ────────────────────────────────────────────────────
-function bSt(msg,cls){document.getElementById('bSt').textContent=msg;document.getElementById('bDot').className='dot'+(cls?' '+cls:'');}
-function cSt(msg,cls){document.getElementById('cSt').textContent=msg;document.getElementById('cDot').className='dot'+(cls?' '+cls:'');}
+function bSt(m,c){document.getElementById('bSt').textContent=m;document.getElementById('bDot').className='dot'+(c?' '+c:'');}
+function cSt(m,c){document.getElementById('cSt').textContent=m;document.getElementById('cDot').className='dot'+(c?' '+c:'');}
 
 // ── AREA ──────────────────────────────────────────────────────
-function polyAreaKm2(poly){
-  if(poly.length<3)return 0;
-  let area=0;const R=6371000;
-  for(let i=0;i<poly.length;i++){
-    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
-    const y1=la*Math.PI/180*R,x1=lo*Math.PI/180*R*Math.cos(la*Math.PI/180);
-    const y2=lb*Math.PI/180*R,x2=lp*Math.PI/180*R*Math.cos(lb*Math.PI/180);
-    area+=x1*y2-x2*y1;
-  }
-  return Math.abs(area/2)/1e6;
+function polyAreaKm2(p){
+  if(p.length<3)return 0;let a=0;const R=6371000;
+  for(let i=0;i<p.length;i++){const[la,lo]=p[i],[lb,lp]=p[(i+1)%p.length];
+    a+=(lo*Math.PI/180*R*Math.cos(la*Math.PI/180))*(lb*Math.PI/180*R)-(lp*Math.PI/180*R*Math.cos(lb*Math.PI/180))*(la*Math.PI/180*R);}
+  return Math.abs(a/2)/1e6;
 }
-
-function updateAreaBadge(){
+function updateBadge(){
   const a=bPts.length>=3?polyAreaKm2(bPts):0;
   document.getElementById('area-badge').textContent=a>0?`▣ ${a.toFixed(2)} km²`:'';
-  if(a>0){
-    document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² definidos — pronto para gerar`;
-    document.getElementById('pronto-banner').classList.add('show');
-  } else {
-    document.getElementById('pronto-banner').classList.remove('show');
-  }
+  if(a>0){document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² — pronto`;document.getElementById('pronto-banner').classList.add('show');}
+  else document.getElementById('pronto-banner').classList.remove('show');
 }
 
 // ── GPS ───────────────────────────────────────────────────────
 function irGPS(){
   if(!navigator.geolocation){bSt('GPS indisponível','r');return;}
-  bSt('Obtendo localização...','y');
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const{latitude:lat,longitude:lng}=pos.coords;
+  bSt('Obtendo...','y');
+  navigator.geolocation.getCurrentPosition(p=>{
+    const{latitude:lat,longitude:lng}=p.coords;
     mapB.setView([lat,lng],15);mapC.setView([lat,lng],15);
     if(gpsMkr)mapB.removeLayer(gpsMkr);
     gpsMkr=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="gps-dot"></div>',iconSize:[13,13],iconAnchor:[6,6]})}).addTo(mapB).bindPopup('📍 Você está aqui').openPopup();
@@ -286,39 +267,66 @@ function setBMode(m){
   bRedraw();
   bSt({add:'Toque no mapa para adicionar pontos',move:'Arraste um ponto para movê-lo',del:'Toque num ponto para removê-lo'}[m],'');
 }
-
 function bRedraw(){
-  if(bPolyLayer)mapB.removeLayer(bPolyLayer);
-  if(bPts.length>=3)bPolyLayer=L.polygon(bPts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(mapB);
-  else if(bPts.length>=2)bPolyLayer=L.polyline(bPts,{color:'#F5C800',weight:2,dashArray:'5,4'}).addTo(mapB);
-  else bPolyLayer=null;
+  if(bPolyL)mapB.removeLayer(bPolyL);
+  if(bPts.length>=3)bPolyL=L.polygon(bPts,{color:'#F5C800',weight:2,fillColor:'#F5C800',fillOpacity:0.07}).addTo(mapB);
+  else if(bPts.length>=2)bPolyL=L.polyline(bPts,{color:'#F5C800',weight:2,dashArray:'5,4'}).addTo(mapB);
+  else bPolyL=null;
   bVtx.forEach(m=>mapB.removeLayer(m));bVtx=[];
   bPts.forEach((pt,i)=>{
     const cls=bMode==='move'?'vx cy':bMode==='del'?'vx rd':'vx am';
     const mkr=L.marker(pt,{draggable:bMode==='move',icon:L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).addTo(mapB);
-    mkr.on('dragend',()=>{bPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];bRedraw();updateAreaBadge();});
-    mkr.on('click',e=>{if(bMode==='del'){L.DomEvent.stopPropagation(e);bPts.splice(i,1);bRedraw();updateAreaBadge();}});
+    mkr.on('dragend',()=>{bPts[i]=[mkr.getLatLng().lat,mkr.getLatLng().lng];bRedraw();updateBadge();});
+    mkr.on('click',e=>{if(bMode==='del'){L.DomEvent.stopPropagation(e);bPts.splice(i,1);bRedraw();updateBadge();}});
     bVtx.push(mkr);
   });
-  updateAreaBadge();
+  updateBadge();
 }
-
 mapB.on('click',e=>{
   if(bMode!=='add')return;
-  bPts.push([e.latlng.lat,e.latlng.lng]);
-  bRedraw();
+  bPts.push([e.latlng.lat,e.latlng.lng]);bRedraw();
   bSt(`${bPts.length} pontos`,'');
 });
-
 function limparBairro(){
-  bPts=[];
-  if(bPolyLayer)mapB.removeLayer(bPolyLayer);
-  bPolyLayer=null;bVtx.forEach(m=>mapB.removeLayer(m));bVtx=[];
+  bPts=[];if(bPolyL)mapB.removeLayer(bPolyL);bPolyL=null;
+  bVtx.forEach(m=>mapB.removeLayer(m));bVtx=[];
   document.getElementById('confirm-banner').classList.remove('show');
-  updateAreaBadge();bSt('Limpo','');setBMode('add');
+  updateBadge();bSt('Limpo','');setBMode('add');
 }
 
-// ── BUSCA ─────────────────────────────────────────────────────
+// ── EXPORT / IMPORT BAIRRO ────────────────────────────────────
+function exportBairro(){
+  if(bPts.length<3){bSt('Desenhe o perímetro primeiro','r');return;}
+  const geo={type:'FeatureCollection',features:[{type:'Feature',geometry:{type:'Polygon',coordinates:[[...bPts.map(p=>[p[1],p[0]]),[bPts[0][1],bPts[0][0]]]]},properties:{cliente:document.getElementById('iCliente').value,campanha:document.getElementById('iCampanha').value}}]};
+  const blob=new Blob([JSON.stringify(geo,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`bairro-${document.getElementById('iCliente').value||'rota'}.geojson`;
+  a.click();URL.revokeObjectURL(url);
+  bSt('GeoJSON exportado','g');
+}
+function importBairroClick(){document.getElementById('importFile').click();}
+function importBairro(ev){
+  const file=ev.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const geo=JSON.parse(e.target.result);
+      let coords=null;
+      if(geo.type==='FeatureCollection')coords=geo.features[0].geometry.coordinates[0];
+      else if(geo.type==='Feature')coords=geo.geometry.coordinates[0];
+      else if(geo.type==='Polygon')coords=geo.coordinates[0];
+      if(!coords)throw new Error('formato inválido');
+      bPts=coords.slice(0,-1).map(c=>[c[1],c[0]]);
+      bRedraw();
+      mapB.fitBounds(L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1]))),{padding:[20,20]});
+      bSt('GeoJSON importado','g');
+    }catch(err){bSt('Erro ao importar: formato inválido','r');}
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+// ── BUSCA BAIRRO ──────────────────────────────────────────────
 async function buscarBairro(){
   const q=document.getElementById('bairro-input').value.trim();
   const c=document.getElementById('cidade-input').value.trim()||'Brasil';
@@ -326,81 +334,206 @@ async function buscarBairro(){
   bSt(`Buscando "${q}"...`,'y');
   document.getElementById('confirm-banner').classList.remove('show');
   try{
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', '+c)}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.2'}});
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', '+c)}&format=json&polygon_geojson=1&limit=5`,{headers:{'Accept-Language':'pt-BR','User-Agent':'AutovisionRoute/3.3'}});
     const data=await res.json();
     const item=data.find(d=>['suburb','neighbourhood','quarter','residential'].includes(d.type))||data[0];
-    if(!item){bSt('Não encontrado — tente outro nome','r');return;}
+    if(!item){bSt('Não encontrado','r');return;}
     const bb=item.boundingbox;
     mapB.fitBounds([[+bb[0],+bb[2]],[+bb[1],+bb[3]]],{padding:[20,20]});
     pendingName=item.display_name.split(',').slice(0,2).join(',').trim();
     if(item.geojson&&(item.geojson.type==='Polygon'||item.geojson.type==='MultiPolygon')){
-      pendingGeojson=item.geojson;
+      pendingGeo=item.geojson;
       document.getElementById('confirm-name').textContent=`"${pendingName}" — é esse?`;
       document.getElementById('confirm-banner').classList.add('show');
-      bSt('Confirme o bairro encontrado','y');
-    }else{
-      bSt('Encontrado sem polígono — desenhe manualmente','');
-    }
+      bSt('Confirme o bairro','y');
+    }else bSt('Sem polígono — desenhe manualmente','');
   }catch(e){bSt('Erro na busca','r');}
 }
 document.getElementById('bairro-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
 document.getElementById('cidade-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarBairro();});
-
 function confirmarBairro(){
-  if(!pendingGeojson)return;
-  let coords=pendingGeojson.type==='Polygon'?pendingGeojson.coordinates[0]:pendingGeojson.coordinates[0][0];
+  if(!pendingGeo)return;
+  let coords=pendingGeo.type==='Polygon'?pendingGeo.coordinates[0]:pendingGeo.coordinates[0][0];
   const want=Math.min(28,Math.max(14,Math.floor(coords.length/4)));
   const step=Math.max(1,Math.floor(coords.length/want));
   bPts=coords.filter((_,i)=>i%step===0).map(c=>[c[1],c[0]]);
   if(bPts.length>1){const[f,l]=[bPts[0],bPts[bPts.length-1]];if(Math.abs(f[0]-l[0])<0.00001&&Math.abs(f[1]-l[1])<0.00001)bPts.pop();}
   bRedraw();
   document.getElementById('confirm-banner').classList.remove('show');
-  bSt(`"${pendingName}" aplicado — ajuste se necessário`,'g');
-  pendingGeojson=null;
+  bSt(`"${pendingName}" aplicado`,'g');pendingGeo=null;
 }
 function rejeitarBairro(){
   document.getElementById('confirm-banner').classList.remove('show');
-  bSt('Rejeitado — tente outro nome','');
-  pendingGeojson=null;
+  bSt('Rejeitado — tente outro nome','');pendingGeo=null;
 }
 
-// ── DENSITY ───────────────────────────────────────────────────
-function setDensity(d){
-  [1,2,3].forEach(i=>document.getElementById('d'+i).className='btn'+(i===d?' on':''));
-  densityTarget=d===1?25:d===2?40:60;
-  cSt({1:'Leve (~25 pts)',2:'Médio (~40 pts)',3:'Denso (~60 pts)'}[d]+' — clique ▶ GERAR','');
+// ── CIRCUITO MODE ─────────────────────────────────────────────
+function setCMode(m){
+  cMode=m;
+  ['cBtnAdd','cBtnNode','cBtnStart','cBtnDel'].forEach(id=>document.getElementById(id).className='btn');
+  const cls={add:'on',node:'on-node',start:'on-start',del:'on-del'};
+  document.getElementById({add:'cBtnAdd',node:'cBtnNode',start:'cBtnStart',del:'cBtnDel'}[m]).className='btn '+cls[m];
+  const hints={
+    add:'Toque no mapa para adicionar waypoint à rota',
+    node:'Carregando nós OSM... toque num nó roxo para adicionar à rota',
+    start:'Toque no mapa para definir o ponto de início',
+    del:'Toque num waypoint numerado para removê-lo (segure para reordenar)'
+  };
+  cSt(hints[m],'');
+  if(m==='node') carregarNos();
+  else {nodeMarkers.forEach(mk=>mapC.removeLayer(mk));nodeMarkers=[];}
 }
 
-// ── GEOMETRY ──────────────────────────────────────────────────
-function scanLine(poly,lat){
-  const xs=[];
-  for(let i=0;i<poly.length;i++){
-    const[la,lo]=poly[i],[lb,lp]=poly[(i+1)%poly.length];
-    if((la<=lat&&lat<lb)||(lb<=lat&&lat<la))xs.push(lo+(lat-la)/(lb-la)*(lp-lo));
+// ── NÓS OSM via Overpass ──────────────────────────────────────
+async function carregarNos(){
+  if(bPts.length<3){cSt('Defina o bairro primeiro','r');setCMode('add');return;}
+  cSt('Carregando interseções OSM...','y');
+  const lats=bPts.map(p=>p[0]),lons=bPts.map(p=>p[1]);
+  const bbox=`${Math.min(...lats)},${Math.min(...lons)},${Math.max(...lats)},${Math.max(...lons)}`;
+  const poly=bPts.map(p=>`${p[0]} ${p[1]}`).join(' ');
+  const q=`[out:json][timeout:20];(node(poly:"${poly}")[highway~"^(motorway_junction|crossing|traffic_signals|stop|give_way)$"];way(poly:"${poly}")[highway][highway!~"^(footway|path|steps|cycleway|pedestrian|service)$"];);out center 200;`;
+  try{
+    const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(20000)});
+    const data=await res.json();
+    nodeMarkers.forEach(mk=>mapC.removeLayer(mk));nodeMarkers=[];
+    // Filtra nós dentro do polígono
+    const nodes=data.elements.filter(el=>{
+      const lat=el.lat||(el.center&&el.center.lat);
+      const lon=el.lon||(el.center&&el.center.lon);
+      return lat&&lon&&ptInPoly([lat,lon],bPts);
+    }).slice(0,300);
+    nodes.forEach(el=>{
+      const lat=el.lat||(el.center.lat),lon=el.lon||(el.center.lon);
+      const mk=L.marker([lat,lon],{icon:L.divIcon({className:'',html:'<div class="node-dot"></div>',iconSize:[8,8],iconAnchor:[4,4]})}).addTo(mapC);
+      mk.on('click',e=>{L.DomEvent.stopPropagation(e);adicionarWaypoint(lat,lon);});
+      nodeMarkers.push(mk);
+    });
+    cSt(`${nodes.length} nós OSM carregados — toque para adicionar à rota`,'g');
+  }catch(e){cSt('Erro ao carregar nós OSM — use modo ✚ Ponto','r');}
+}
+
+function ptInPoly(pt,poly){
+  let inside=false;const[px,py]=pt;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const[xi,yi]=poly[i],[xj,yj]=poly[j];
+    if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi))inside=!inside;
   }
-  return xs.sort((a,b)=>a-b);
+  return inside;
 }
 
-function gradeControlada(poly,n){
-  const lats=poly.map(p=>p[0]);
-  const[loLat,hiLat]=[Math.min(...lats),Math.max(...lats)];
-  const nRows=Math.max(3,Math.round(Math.sqrt(n*1.5)));
-  const stepLat=(hiLat-loLat)/nRows;
-  const all=[];let ltr=true;
-  for(let i=0;i<=nRows;i++){
-    const lat=loLat+i*stepLat;
-    const xs=scanLine(poly,lat);
-    const row=[];
-    for(let j=0;j<xs.length-1;j+=2){
-      const nCols=Math.max(2,Math.round(n/nRows));
-      const stepLon=(xs[j+1]-xs[j])/nCols;
-      for(let k=0;k<=nCols;k++)row.push([lat,xs[j]+k*stepLon]);
-    }
-    if(row.length){if(!ltr)row.reverse();all.push(...row);ltr=!ltr;}
+// ── WAYPOINTS ─────────────────────────────────────────────────
+mapC.on('click',e=>{
+  if(cMode==='add'){adicionarWaypoint(e.latlng.lat,e.latlng.lng);}
+  else if(cMode==='start'){definirInicio(e.latlng.lat,e.latlng.lng);}
+});
+
+function adicionarWaypoint(lat,lng){
+  waypoints.push({lat,lng});
+  renderWaypoints();
+  cSt(`${waypoints.length} waypoints — ▶ GERAR para calcular rota`,'');
+}
+
+function definirInicio(lat,lng){
+  startPt={lat,lng};
+  if(startMkr)mapC.removeLayer(startMkr);
+  startMkr=L.circleMarker([lat,lng],{radius:9,color:var_green,fillColor:var_green,fillOpacity:1,weight:2}).addTo(mapC).bindPopup('⊙ PONTO DE INÍCIO');
+  startMkr._av=true;
+  cSt('Início definido — adicione waypoints e ▶ GERAR','g');
+  setCMode('add');
+}
+// workaround for CSS var in JS
+const var_green='#4CAF50';
+
+function renderWaypoints(){
+  wpMarkers.forEach(m=>mapC.removeLayer(m));wpMarkers=[];
+  // Linha de preview
+  if(routeLayer){mapC.removeLayer(routeLayer);routeLayer=null;}
+  if(waypoints.length>1){
+    const pts=startPt?[startPt,...waypoints]:waypoints;
+    routeLayer=L.polyline(pts.map(p=>[p.lat,p.lng]),{color:'#C084FC',weight:2,opacity:.5,dashArray:'4,4'}).addTo(mapC);
+    routeLayer._av=true;
   }
-  if(all.length<=n)return all;
-  const step=Math.floor(all.length/n);
-  return all.filter((_,i)=>i%step===0).slice(0,n);
+  waypoints.forEach((wp,i)=>{
+    const isDel=(cMode==='del');
+    const cls='wp-num'+(i===0&&!startPt?' start':'')+(isDel?' del-mode':'');
+    const mkr=L.marker([wp.lat,wp.lng],{
+      icon:L.divIcon({className:'',html:`<div class="${cls}">${i+1}</div>`,iconSize:[20,20],iconAnchor:[10,10]})
+    }).addTo(mapC);
+    mkr.on('click',e=>{
+      L.DomEvent.stopPropagation(e);
+      if(cMode==='del'){waypoints.splice(i,1);renderWaypoints();cSt(`Ponto ${i+1} removido — ${waypoints.length} restantes`,'');}
+      else{abrirReorder(i);}
+    });
+    wpMarkers.push(mkr);
+  });
+}
+
+// ── REORDER ───────────────────────────────────────────────────
+function abrirReorder(i){
+  reorderIdx=i;
+  document.getElementById('rp-from').textContent=i+1;
+  document.getElementById('rp-pos').value=i+1;
+  document.getElementById('rp-pos').max=waypoints.length;
+  document.getElementById('reorder-popup').classList.add('show');
+}
+function confirmarReorder(){
+  const newPos=parseInt(document.getElementById('rp-pos').value)-1;
+  if(reorderIdx===null||newPos<0||newPos>=waypoints.length){fecharReorder();return;}
+  const[item]=waypoints.splice(reorderIdx,1);
+  waypoints.splice(newPos,0,item);
+  renderWaypoints();fecharReorder();
+  cSt(`Ponto movido para posição ${newPos+1}`,'g');
+}
+function fecharReorder(){reorderIdx=null;document.getElementById('reorder-popup').classList.remove('show');}
+
+// ── GERAR ROTA ────────────────────────────────────────────────
+async function gerarRota(){
+  const allPts=startPt?[startPt,...waypoints]:waypoints;
+  if(allPts.length<2){cSt('Adicione pelo menos 2 waypoints','r');return;}
+  const horas=parseFloat(document.getElementById('iHoras').value)||3;
+  const cliente=document.getElementById('iCliente').value||'—';
+  const campanha=document.getElementById('iCampanha').value||'—';
+  const areaKm2=bPts.length>=3?polyAreaKm2(bPts):0;
+
+  // Perímetro referência
+  if(perimRefL)mapC.removeLayer(perimRefL);
+  if(bPts.length>=3){perimRefL=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.04,dashArray:'4,4'}).addTo(mapC);}
+
+  cSt(`Calculando rota (${allPts.length} pts)...`,'y');
+
+  let geomLL,viaRua=true,distM;
+  try{
+    const coords=allPts.map(p=>`${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
+    const url=`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson`;
+    const r=await fetch(url,{signal:AbortSignal.timeout(30000)});
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    if(d.code!=='Ok')throw new Error(d.code);
+    distM=d.trips[0].distance;
+    geomLL=d.trips[0].geometry.coordinates.map(c=>L.latLng(c[1],c[0]));
+  }catch(e){
+    console.error(e);viaRua=false;
+    const pts=[...allPts,allPts[0]];
+    distM=0;for(let i=0;i<pts.length-1;i++)distM+=haversine([pts[i].lat,pts[i].lng],[pts[i+1].lat,pts[i+1].lng]);
+    geomLL=pts.map(p=>L.latLng(p.lat,p.lng));
+  }
+
+  // Desenha rota
+  if(routeLayer)mapC.removeLayer(routeLayer);
+  routeLayer=L.polyline(geomLL,{color:'#C084FC',weight:3,opacity:.9}).addTo(mapC);
+  routeLayer._av=true;
+  lastGeom=geomLL;
+
+  const voltaKm=distM/1000;
+  const voltaHr=voltaKm/SPD;
+  const voltas=Math.floor(horas/voltaHr);
+  const totalKm=voltas*voltaKm;
+  const pct=areaKm2>0?Math.min(100,Math.round((voltaKm/(areaKm2*12))*100)):0;
+
+  lastData={voltaKm,voltaHr,voltas,totalKm,areaKm2,pct,horas,cliente,campanha,viaRua,nPts:allPts.length};
+  populaDados(lastData);
+  document.getElementById('tab-btn-dados').classList.add('ready');
+  cSt(`${voltaKm.toFixed(1)}km · ${fmtT(voltaHr)}/volta · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
 }
 
 function haversine(a,b){
@@ -408,137 +541,47 @@ function haversine(a,b){
   const s=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(s));
 }
-function distH(pts){let d=0;for(let i=0;i<pts.length-1;i++)d+=haversine(pts[i],pts[i+1]);return d;}
+function fmtT(h){const hh=Math.floor(h),mm=Math.round((h-hh)*60);if(mm===60)return`${hh+1}h00`;return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;}
 
-function fmtT(h){
-  const hh=Math.floor(h),mm=Math.round((h-hh)*60);
-  if(mm===60)return`${hh+1}h00`;
-  return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;
+function limparCircuito(){
+  waypoints=[];startPt=null;
+  if(startMkr)mapC.removeLayer(startMkr);startMkr=null;
+  if(routeLayer)mapC.removeLayer(routeLayer);routeLayer=null;
+  if(perimRefL)mapC.removeLayer(perimRefL);perimRefL=null;
+  wpMarkers.forEach(m=>mapC.removeLayer(m));wpMarkers=[];
+  nodeMarkers.forEach(m=>mapC.removeLayer(m));nodeMarkers=[];
+  lastGeom=null;lastData=null;
+  document.getElementById('dados-empty').style.display='block';
+  document.getElementById('d-metricas').style.display='none';
+  document.getElementById('d-verdict').style.display='none';
+  document.getElementById('d-export').style.display='none';
+  document.getElementById('tab-btn-dados').classList.remove('ready');
+  cSt('Limpo','');setCMode('add');
 }
 
-async function osrmTrip(pts){
-  const coords=pts.map(p=>`${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
-  const r=await fetch(`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=true&source=first&overview=full&geometries=geojson`,{signal:AbortSignal.timeout(30000)});
-  if(!r.ok)throw new Error('OSRM '+r.status);
-  const d=await r.json();
-  if(d.code!=='Ok')throw new Error(d.code);
-  return{distM:d.trips[0].distance,geom:d.trips[0].geometry.coordinates.map(c=>[c[1],c[0]])};
-}
-
-// ── ANIMAÇÃO ──────────────────────────────────────────────────
-function animateRoute(geomLL,onDone){
-  mapC.eachLayer(l=>{if(l._av)mapC.removeLayer(l);});
-  const line=L.polyline([],{color:'#C084FC',weight:3,opacity:.9}).addTo(mapC);
-  line._av=true;
-  lastGeom=geomLL;
-  const step=Math.max(1,Math.floor(geomLL.length/150));
-  let i=0;
-  function tick(){
-    if(i>=geomLL.length){if(onDone)onDone();return;}
-    for(let k=0;k<step&&i<geomLL.length;k++,i++)line.addLatLng(geomLL[i]);
-    requestAnimationFrame(tick);
-  }
-  tick();
-}
-
-// ── GERAR ─────────────────────────────────────────────────────
-async function gerar(){
-  if(bPts.length<3){cSt('Defina o bairro na aba BAIRRO primeiro','r');showTab('bairro');return;}
-  const horas=parseFloat(document.getElementById('iHoras').value)||3;
-  const cliente=document.getElementById('iCliente').value||'—';
-  const campanha=document.getElementById('iCampanha').value||'—';
-  const areaKm2=polyAreaKm2(bPts);
-
-  const bounds=L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1])));
-  mapC.fitBounds(bounds,{padding:[20,20]});
-
-  // Perímetro referência
-  mapC.eachLayer(l=>{if(l._av)mapC.removeLayer(l);});
-  const perim=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.05,dashArray:'4,4'}).addTo(mapC);
-  perim._av=true;
-
-  cSt(`Calculando grade (${densityTarget} pts)...`,'y');
-  const waypoints=gradeControlada(bPts,densityTarget);
-  if(waypoints.length<3){cSt('Área muito pequena','r');return;}
-
-  cSt(`Calculando circuito (${waypoints.length} pts)...`,'y');
-
-  let geomLL,viaRua=true,distM;
-  try{
-    const r=await osrmTrip(waypoints);
-    distM=r.distM;
-    geomLL=r.geom.map(p=>L.latLng(p[0],p[1]));
-  }catch(e){
-    console.error(e);viaRua=false;
-    const pts=[...waypoints,waypoints[0]];
-    distM=distH(pts);
-    geomLL=pts.map(p=>L.latLng(p[0],p[1]));
-  }
-
-  const startMkr=L.circleMarker(geomLL[0],{radius:8,color:'#F5C800',fillColor:'#F5C800',fillOpacity:1,weight:2}).addTo(mapC).bindPopup('▶ INÍCIO / FIM');
-  startMkr._av=true;
-
-  cSt('Desenhando...','y');
-
-  animateRoute(geomLL,()=>{
-    const voltaKm=viaRua?(distM/1000):(distH(waypoints.map(p=>[p[0],p[1]]))/1000);
-    const voltaHr=voltaKm/SPD;
-    const voltas=Math.floor(horas/voltaHr);
-    const totalKm=voltas*voltaKm;
-    const pct=Math.min(100,Math.round((voltaKm/(areaKm2*12))*100));
-
-    // Salva dados
-    lastData={voltaKm,voltaHr,voltas,totalKm,areaKm2,pct,horas,cliente,campanha,viaRua,waypoints:waypoints.length};
-
-    // Popula aba DADOS
-    populaDados(lastData);
-
-    // Marca aba dados com indicador
-    document.getElementById('tab-btn-dados').classList.add('has-data');
-
-    cSt(`${voltaKm.toFixed(1)}km/volta · ${fmtT(voltaHr)} · ${voltas} volta${voltas!==1?'s':''} em ${horas}h`,'g');
-  });
-}
-
+// ── DADOS ─────────────────────────────────────────────────────
 function populaDados(d){
   document.getElementById('dados-empty').style.display='none';
-  document.getElementById('dados-metricas').style.display='block';
-  document.getElementById('dados-verdict').style.display='block';
-  document.getElementById('dados-export').style.display='block';
-
+  document.getElementById('d-metricas').style.display='block';
+  document.getElementById('d-verdict').style.display='block';
+  document.getElementById('d-export').style.display='block';
   document.getElementById('dKm').innerHTML=`${d.voltaKm.toFixed(1)}<span>km</span>`;
   document.getElementById('dT').innerHTML=fmtT(d.voltaHr);
-  document.getElementById('dHorasLabel').textContent=d.horas;
-  document.getElementById('dVoltas').innerHTML=`${d.voltas}<span>volta${d.voltas!==1?'s':''}</span>`;
-  document.getElementById('dTotalKm').innerHTML=`${d.totalKm.toFixed(1)}<span>km</span>`;
+  document.getElementById('dVoltas').innerHTML=`${d.voltas}<span>x</span>`;
+  document.getElementById('dTKm').innerHTML=`${d.totalKm.toFixed(1)}<span>km</span>`;
   document.getElementById('dArea').innerHTML=`${d.areaKm2.toFixed(2)}<span>km²</span>`;
-  document.getElementById('dCobertura').innerHTML=`~${d.pct}<span>%</span>`;
-
+  document.getElementById('dCob').innerHTML=`~${d.pct}<span>%</span>`;
   const c=d.cliente!=='—'?d.cliente:'Campanha';
   const camp=d.campanha!=='—'?` · ${d.campanha}`:'';
   document.getElementById('dVerdictText').innerHTML=
     `<strong>${c}${camp}</strong><br>`+
-    `Em <strong>${d.horas}h</strong> você consegue dar <strong>${d.voltas} volta${d.voltas!==1?'s':''} completa${d.voltas!==1?'s':''}</strong> pelo bairro.<br>`+
-    `Cada volta tem <strong>${d.voltaKm.toFixed(1)}km</strong> e leva <strong>${fmtT(d.voltaHr)}</strong>.`;
-
-  document.getElementById('dSubInfo').innerHTML=
-    `Área do bairro: ${d.areaKm2.toFixed(2)} km² · Cobertura estimada por volta: ~${d.pct}% das ruas<br>`+
-    `Velocidade base: ${SPD} km/h · Pontos de rota: ${d.waypoints} · ${d.viaRua?'Via ruas reais (OSRM)':'Estimativa linha reta'}`;
+    `Em <strong>${d.horas}h</strong> você consegue dar <strong>${d.voltas} volta${d.voltas!==1?'s':''}</strong> pelo circuito definido.<br>`+
+    `Cada volta: <strong>${d.voltaKm.toFixed(1)}km</strong> em <strong>${fmtT(d.voltaHr)}</strong>.`;
+  document.getElementById('dSub').innerHTML=
+    `Área: ${d.areaKm2.toFixed(2)} km² · Cobertura est.: ~${d.pct}% · ${d.nPts} waypoints · ${d.viaRua?'OSRM real':'estimativa'}`;
 }
 
-// ── LIMPAR CIRCUITO ───────────────────────────────────────────
-function limparCircuito(){
-  mapC.eachLayer(l=>{if(l._av)mapC.removeLayer(l);});
-  lastGeom=null;lastData=null;
-  document.getElementById('dados-empty').style.display='block';
-  document.getElementById('dados-metricas').style.display='none';
-  document.getElementById('dados-verdict').style.display='none';
-  document.getElementById('dados-export').style.display='none';
-  document.getElementById('tab-btn-dados').classList.remove('has-data');
-  cSt('Limpo','');
-}
-
-// ── EXPORT GPX ────────────────────────────────────────────────
+// ── GPX ───────────────────────────────────────────────────────
 function exportGPX(){
   if(!lastGeom||!lastGeom.length){cSt('Gere a rota primeiro','r');return;}
   const cliente=document.getElementById('iCliente').value||'rota';
@@ -546,20 +589,16 @@ function exportGPX(){
   const name=`${cliente} — ${campanha}`;
   const startMs=Date.now();
   const pts=lastGeom.map(p=>[p.lat,p.lng]);
-  const totalKm=distH(pts)/1000;
-  const msPerPt=(totalKm/SPD)*3600000/pts.length;
+  let dist=0;for(let i=0;i<pts.length-1;i++)dist+=haversine(pts[i],pts[i+1]);
+  const msPerPt=(dist/SPD/1000)*3600000/pts.length;
   let trkpts='';
-  pts.forEach((pt,i)=>{
-    const t=new Date(startMs+i*msPerPt).toISOString();
-    trkpts+=`      <trkpt lat="${pt[0].toFixed(6)}" lon="${pt[1].toFixed(6)}">\n        <time>${t}</time>\n      </trkpt>\n`;
-  });
+  pts.forEach((pt,i)=>{const t=new Date(startMs+i*msPerPt).toISOString();trkpts+=`      <trkpt lat="${pt[0].toFixed(6)}" lon="${pt[1].toFixed(6)}">\n        <time>${t}</time>\n      </trkpt>\n`;});
   const gpx=`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="AUTOVISION" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata><name>${name}</name><time>${new Date(startMs).toISOString()}</time></metadata>\n  <trk><name>${name}</name><trkseg>\n${trkpts}  </trkseg></trk>\n</gpx>`;
   const blob=new Blob([gpx],{type:'application/gpx+xml'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download=`autovision-${cliente}-${campanha}.gpx`.replace(/\s+/g,'-').toLowerCase();
   a.click();URL.revokeObjectURL(url);
-  cSt('GPX exportado — importe em strava.com/upload','g');
+  cSt('GPX exportado','g');
 }
 </script>
 </body>
