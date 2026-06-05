@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -100,7 +100,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v4.1</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v4.2</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -524,58 +524,45 @@ function definirInicio(lat,lng){
 const var_green='#4CAF50';
 
 function renderWaypoints(){
-  wpMarkers.forEach(m=>mapC.removeLayer(m));wpMarkers=[];
-  // Linha de preview
+  // Clear existing markers
+  wpMarkers.forEach(m=>mapC.removeLayer(m)); wpMarkers=[];
+
+  // Preview line
   if(routeLayer){mapC.removeLayer(routeLayer);routeLayer=null;}
-  if(waypoints.length>1){
-    const pts=startPt?[startPt,...waypoints]:waypoints;
-    routeLayer=L.polyline(pts.map(p=>[p.lat,p.lng]),{color:'#C084FC',weight:2,opacity:.5,dashArray:'4,4'}).addTo(mapC);
+  const allPts=startPt?[startPt,...waypoints]:waypoints;
+  if(allPts.length>1){
+    routeLayer=L.polyline(allPts.map(p=>[p.lat,p.lng]),{color:'#C084FC',weight:2,opacity:.5,dashArray:'4,4'}).addTo(mapC);
     routeLayer._av=true;
   }
-  waypoints.forEach((wp,i)=>{
-    const isDel=(cMode==='del');
-    const cls='wp-num'+(i===0&&!startPt?' start':'')+(isDel?' del-mode':'');
-    const mkr=L.marker([wp.lat,wp.lng],{
-      icon:L.divIcon({className:'',html:`<div class="${cls}">${i+1}</div>`,iconSize:[20,20],iconAnchor:[10,10]})
-    }).addTo(mapC);
-    mkr.on('click',e=>{
-      L.DomEvent.stopPropagation(e);
-      if(cMode==='del'){waypoints.splice(i,1);renderWaypoints();cSt(`Ponto ${i+1} removido — ${waypoints.length} restantes`,'');}
-      else{abrirReorder(i);}
-    });
-    wpMarkers.push(mkr);
-  });
 
-  // Odd-node detection: count how many times each point appears as endpoint
-  const allPtsForDeg = startPt ? [{lat:startPt.lat,lng:startPt.lng},...waypoints] : waypoints;
-  const degMap = {};
+  // Odd-node degree map
   function dKey(p){return p.lat.toFixed(5)+','+p.lng.toFixed(5);}
-  allPtsForDeg.forEach((pt,i)=>{
+  const degMap={};
+  allPts.forEach((pt,i)=>{
     const k=dKey(pt);
     if(!degMap[k])degMap[k]=0;
-    // Each point that connects to previous and next counts its edges
     if(i>0)degMap[k]++;
-    if(i<allPtsForDeg.length-1)degMap[k]++;
+    if(i<allPts.length-1)degMap[k]++;
   });
 
-  // Re-render markers with odd indicator
-  wpMarkers.forEach(m=>mapC.removeLayer(m));
-  wpMarkers=[];
-  cPts.forEach((pt,i)=>{
+  // Draw numbered markers — one pass, uses waypoints array
+  waypoints.forEach((wp,i)=>{
     const isDel=(cMode==='del');
-    const k=dKey(pt);
+    const isDraggable=(cMode==='move');
+    const k=dKey(wp);
     const deg=degMap[k]||0;
     const isOdd=(deg>0&&deg%2!==0);
     const isFirst=(i===0&&!startPt);
     let cls='wp-num';
-    if(isDel) cls+=' del-mode';
+    if(isDel)       cls+=' del-mode';
     else if(isFirst) cls+=' start';
-    else if(isOdd) cls+=' odd';
-    const isDraggable=(cMode==='move');
-    const mkr=L.marker([pt.lat,pt.lng],{
+    else if(isOdd)  cls+=' odd';
+
+    const mkr=L.marker([wp.lat,wp.lng],{
       draggable:isDraggable,
       icon:L.divIcon({className:'',html:'<div class="'+cls+'">'+(i+1)+'</div>',iconSize:[20,20],iconAnchor:[10,10]})
     }).addTo(mapC);
+
     mkr.on('dragend',()=>{
       waypoints[i]={lat:mkr.getLatLng().lat,lng:mkr.getLatLng().lng};
       renderWaypoints();
@@ -583,23 +570,29 @@ function renderWaypoints(){
     });
     mkr.on('click',e=>{
       L.DomEvent.stopPropagation(e);
-      if(cMode==='del'){waypoints.splice(i,1);renderWaypoints();cSt('Ponto '+(i+1)+' removido — '+waypoints.length+' restantes','');}
-      else if(cMode!=='move'){abrirReorder(i);}
+      if(cMode==='del'){
+        waypoints.splice(i,1);
+        renderWaypoints();
+        cSt('Ponto '+(i+1)+' removido — '+waypoints.length+' restantes','');
+      } else if(cMode!=='move'){
+        abrirReorder(i);
+      }
     });
     wpMarkers.push(mkr);
   });
 
-  // Status with odd-node summary
+  // Status bar
   const oddCount=Object.values(degMap).filter(d=>d>0&&d%2!==0).length;
   if(waypoints.length>0){
     if(oddCount>0){
-      const reworkEst=Math.round((oddCount/Math.max(allPtsForDeg.length,1))*15);
-      cSt(waypoints.length+' pts · '+oddCount+' nó'+(oddCount>1?'s ímpares':' ímpar')+' (laranja) — retrabalho ~'+reworkEst+'% · ► GERAR','y');
+      const est=Math.round((oddCount/Math.max(allPts.length,1))*15);
+      cSt(waypoints.length+' pts · '+oddCount+' nó'+(oddCount>1?'s ímpares':' ímpar')+' (laranja) — retrabalho ~'+est+'% · ► GERAR','y');
     } else {
       cSt(waypoints.length+' pts — sem nós ímpares ✔ · ► GERAR','g');
     }
   }
 }
+
 
 // ── REORDER ───────────────────────────────────────────────────
 function abrirReorder(i){
