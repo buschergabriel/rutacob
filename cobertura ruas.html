@@ -78,6 +78,7 @@ input:focus{border-color:var(--am)}
 /* WAYPOINT markers */
 .wp-num{background:var(--purple);color:#fff;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.7);cursor:pointer}
 .wp-num.start{background:var(--green)}
+.wp-num.odd{background:var(--orange);border-color:#fff}
 .wp-num.del-mode{background:var(--red);cursor:pointer}
 /* node dots */
 .node-dot{width:8px;height:8px;border-radius:50%;background:rgba(192,132,252,0.5);border:1px solid var(--purple);cursor:pointer}
@@ -99,7 +100,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.8</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.9</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -538,6 +539,53 @@ function renderWaypoints(){
     });
     wpMarkers.push(mkr);
   });
+
+  // Odd-node detection: count how many times each point appears as endpoint
+  const allPtsForDeg = startPt ? [{lat:startPt.lat,lng:startPt.lng},...waypoints] : waypoints;
+  const degMap = {};
+  function dKey(p){return p.lat.toFixed(5)+','+p.lng.toFixed(5);}
+  allPtsForDeg.forEach((pt,i)=>{
+    const k=dKey(pt);
+    if(!degMap[k])degMap[k]=0;
+    // Each point that connects to previous and next counts its edges
+    if(i>0)degMap[k]++;
+    if(i<allPtsForDeg.length-1)degMap[k]++;
+  });
+
+  // Re-render markers with odd indicator
+  wpMarkers.forEach(m=>mapC.removeLayer(m));
+  wpMarkers=[];
+  cPts.forEach((pt,i)=>{
+    const isDel=(cMode==='del');
+    const k=dKey(pt);
+    const deg=degMap[k]||0;
+    const isOdd=(deg>0&&deg%2!==0);
+    const isFirst=(i===0&&!startPt);
+    let cls='wp-num';
+    if(isDel) cls+=' del-mode';
+    else if(isFirst) cls+=' start';
+    else if(isOdd) cls+=' odd';
+    const mkr=L.marker([pt.lat,pt.lng],{
+      icon:L.divIcon({className:'',html:'<div class="'+cls+'">'+(i+1)+'</div>',iconSize:[20,20],iconAnchor:[10,10]})
+    }).addTo(mapC);
+    mkr.on('click',e=>{
+      L.DomEvent.stopPropagation(e);
+      if(cMode==='del'){waypoints.splice(i,1);renderWaypoints();cSt('Ponto '+(i+1)+' removido — '+waypoints.length+' restantes','');}
+      else{abrirReorder(i);}
+    });
+    wpMarkers.push(mkr);
+  });
+
+  // Status with odd-node summary
+  const oddCount=Object.values(degMap).filter(d=>d>0&&d%2!==0).length;
+  if(waypoints.length>0){
+    if(oddCount>0){
+      const reworkEst=Math.round((oddCount/Math.max(allPtsForDeg.length,1))*15);
+      cSt(waypoints.length+' pts · '+oddCount+' nó'+(oddCount>1?'s ímpares':' ímpar')+' (laranja) — retrabalho ~'+reworkEst+'% · ► GERAR','y');
+    } else {
+      cSt(waypoints.length+' pts — sem nós ímpares ✔ · ► GERAR','g');
+    }
+  }
 }
 
 // ── REORDER ───────────────────────────────────────────────────
@@ -680,8 +728,9 @@ function populaDados(d){
       'Turno: ' + TURNOS[turnoIdx].label + ' (fator ' + turnoFator + ') · Raio sonoro: 40m' +
     '</div>';
 
-    document.getElementById('dSub').innerHTML=
-    `Área: \${d.areaKm2.toFixed(2)} km² · \${d.nPts} waypoints · \${d.viaRua?'OSRM real':'estimativa'} · Metodologia OTH baseada em dados IBGE Censo 2022`;
+    document.getElementById('dSub').innerHTML =
+    'Área: ' + d.areaKm2.toFixed(2) + ' km² · ' + d.nPts + ' waypoints · ' +
+    (d.viaRua ? 'OSRM real' : 'estimativa') + ' · Metodologia OTH baseada em dados IBGE Censo 2022';
 }
 
 
