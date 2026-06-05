@@ -100,7 +100,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v4.2</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v4.3</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -115,6 +115,7 @@ input:focus{border-color:var(--am)}
 
 <div id="tabs">
   <div class="tab active" id="tab-btn-bairro"   onclick="showTab('bairro')">▣ BAIRRO</div>
+  <div class="tab"        id="tab-btn-ruas"     onclick="showTab('ruas')">⊟ RUAS</div>
   <div class="tab"        id="tab-btn-circuito" onclick="showTab('circuito')">⟳ CIRCUITO</div>
   <div class="tab"        id="tab-btn-dados"    onclick="showTab('dados')">≡ DADOS</div>
 </div>
@@ -163,6 +164,33 @@ input:focus{border-color:var(--am)}
     <button class="btn green" onclick="showTab('circuito')">▶ IR PARA CIRCUITO</button>
   </div>
   <div class="statusbar"><div class="dot" id="bDot"></div><span id="bSt">Busque um bairro para começar</span></div>
+</div>
+
+
+<!-- ABA RUAS -->
+<div id="tab-ruas" class="tab-panel">
+  <div class="trow">
+    <button class="btn primary" onclick="carregarRuas()">⟳ CARREGAR RUAS</button>
+    <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-left:8px" id="ruas-legend" style="display:none">
+      <span style="color:#FF4444">■</span> Principal &nbsp;
+      <span style="color:#F5A623">■</span> Coletora &nbsp;
+      <span style="color:#F5C800">■</span> Local &nbsp;
+      <span style="color:#888">■</span> Viela
+    </div>
+    <button class="btn danger" style="margin-left:auto" onclick="limparRuas()">🗑</button>
+  </div>
+  <div class="trow" id="ruas-filter-row" style="display:none">
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap">TOQUE:</div>
+    <div style="font-size:9px;background:#0A2A00;border:1px solid var(--green);color:var(--green);padding:4px 8px;border-radius:2px">Verde = Obrigatória</div>
+    <div style="font-size:9px;background:#1A0000;border:1px solid var(--red);color:var(--red);padding:4px 8px;border-radius:2px">Vermelho = Excluída</div>
+    <div style="font-size:9px;background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:2px">Toque novamente = Normal</div>
+  </div>
+  <div class="map-wrap"><div id="map-ruas"></div></div>
+  <div id="ruas-pronto-banner" style="display:none;background:#001A00;border-top:1px solid var(--green);padding:8px 12px;flex-shrink:0;display:none;gap:8px;align-items:center">
+    <div id="ruas-pronto-info" style="font-size:11px;color:var(--green);flex:1"></div>
+    <button class="btn green" onclick="showTab('circuito')">▶ IR PARA CIRCUITO</button>
+  </div>
+  <div class="statusbar"><div class="dot" id="rDot"></div><span id="rSt">Carregue o bairro primeiro, depois clique ⟳ CARREGAR RUAS</span></div>
 </div>
 
 <!-- ABA CIRCUITO -->
@@ -236,6 +264,144 @@ let lastGeom=null,lastData=null;
 let reorderIdx=null;
 let perimRefL=null;
 
+
+// ── MAP RUAS ──────────────────────────────────────────────────
+const mapR = L.map('map-ruas',{zoomControl:true,attributionControl:false});
+L.tileLayer(TILES,{maxZoom:19}).addTo(mapR);
+mapR.setView([-30.05,-51.17],14);
+
+let ruasLayers={}; // id -> {layer, status: 'normal'|'obrig'|'excluida', data}
+let perimRuasL=null;
+
+const COR_CLASSE = {
+  primary:   '#FF4444',
+  secondary: '#F5A623',
+  tertiary:  '#F5C800',
+  residential:'#AAAAAA',
+  service:   '#555555',
+  other:     '#444444'
+};
+const PESO_CLASSE = {
+  primary:4, secondary:3, tertiary:2.5, residential:2, service:1.5, other:1.5
+};
+
+function rSt(m,c){document.getElementById('rSt').textContent=m;document.getElementById('rDot').className='dot'+(c?' '+c:'');}
+
+async function carregarRuas(){
+  if(bPts.length<3){rSt('Defina o bairro primeiro na aba BAIRRO','r');return;}
+  rSt('Buscando ruas via OpenStreetMap...','y');
+
+  // Sync perimeter
+  if(perimRuasL){mapR.removeLayer(perimRuasL);}
+  perimRuasL=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.04,dashArray:'4,4'}).addTo(mapR);
+  mapR.fitBounds(L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1]))),{padding:[20,20]});
+
+  const polyStr=bPts.map(p=>p[0].toFixed(6)+' '+p[1].toFixed(6)).join(' ');
+  const q=`[out:json][timeout:30];way(poly:"${polyStr}")[highway][highway!~"^(footway|path|steps|cycleway|pedestrian|proposed|construction|track)$"];out geom;`;
+
+  const SERVERS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  let elements=[];
+  for(const srv of SERVERS){
+    try{
+      const res=await fetch(srv,{method:'POST',body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(30000)});
+      if(!res.ok)continue;
+      const d=await res.json();
+      elements=d.elements||[];
+      if(elements.length)break;
+    }catch(e){continue;}
+  }
+
+  if(!elements.length){rSt('Nenhuma rua encontrada — verifique conexão','r');return;}
+
+  // Clear existing
+  Object.values(ruasLayers).forEach(r=>mapR.removeLayer(r.layer));
+  ruasLayers={};
+
+  let nPrimary=0,nSecondary=0,nLocal=0;
+
+  elements.forEach(way=>{
+    if(!way.geometry||way.geometry.length<2)return;
+    const hw=way.tags&&way.tags.highway;
+    let classe='other';
+    if(['motorway','trunk','primary'].includes(hw)) classe='primary';
+    else if(['secondary'].includes(hw)) classe='secondary';
+    else if(['tertiary','unclassified'].includes(hw)) classe='tertiary';
+    else if(['residential','living_street','road'].includes(hw)) classe='residential';
+    else if(['service'].includes(hw)) classe='service';
+
+    if(classe==='primary'||classe==='secondary') nPrimary++;
+    else if(classe==='tertiary') nSecondary++;
+    else nLocal++;
+
+    const pts=way.geometry.map(pt=>[pt.lat,pt.lon]);
+    const nome=(way.tags&&(way.tags.name||way.tags['addr:street']))||'';
+    const layer=L.polyline(pts,{
+      color:COR_CLASSE[classe],
+      weight:PESO_CLASSE[classe],
+      opacity:0.85
+    }).addTo(mapR);
+
+    const wayId=way.id;
+    ruasLayers[wayId]={layer,status:'normal',classe,nome,pts};
+
+    layer.on('click',()=>toggleRua(wayId));
+    if(nome){
+      layer.bindTooltip(nome,{sticky:true,className:'',opacity:0.9,direction:'auto'});
+    }
+  });
+
+  document.getElementById('ruas-filter-row').style.display='flex';
+  document.getElementById('ruas-legend').style.display='block';
+  atualizarRuasBanner();
+  rSt(elements.length+' ruas carregadas · toque para marcar obrigatória (verde) ou excluída (vermelho)','g');
+}
+
+function toggleRua(id){
+  const r=ruasLayers[id];
+  if(!r)return;
+  if(r.status==='normal') r.status='obrig';
+  else if(r.status==='obrig') r.status='excluida';
+  else r.status='normal';
+
+  const cor={normal:COR_CLASSE[r.classe],obrig:'#4CAF50',excluida:'#FF4444'};
+  const peso={normal:PESO_CLASSE[r.classe],obrig:5,excluida:3};
+  const opac={normal:0.85,obrig:1,excluida:0.5};
+  r.layer.setStyle({color:cor[r.status],weight:peso[r.status],opacity:opac[r.status],dashArray:r.status==='excluida'?'6,4':null});
+
+  atualizarRuasBanner();
+}
+
+function atualizarRuasBanner(){
+  const obrig=Object.values(ruasLayers).filter(r=>r.status==='obrig');
+  const excl=Object.values(ruasLayers).filter(r=>r.status==='excluida');
+  const banner=document.getElementById('ruas-pronto-banner');
+  const info=document.getElementById('ruas-pronto-info');
+  if(obrig.length>0||excl.length>0){
+    banner.style.display='flex';
+    info.textContent=(obrig.length>0?obrig.length+' obrigatória'+(obrig.length>1?'s':''):'')+
+      (excl.length>0?(obrig.length>0?' · ':'')+excl.length+' excluída'+(excl.length>1?'s':''):'');
+  } else {
+    banner.style.display='none';
+  }
+}
+
+function limparRuas(){
+  Object.values(ruasLayers).forEach(r=>mapR.removeLayer(r.layer));
+  ruasLayers={};
+  if(perimRuasL){mapR.removeLayer(perimRuasL);perimRuasL=null;}
+  document.getElementById('ruas-filter-row').style.display='none';
+  document.getElementById('ruas-pronto-banner').style.display='none';
+  rSt('Limpo','');
+}
+
+// Export obrigatorias as reference lines to circuito map
+function getRuasObrigatorias(){
+  return Object.values(ruasLayers).filter(r=>r.status==='obrig');
+}
+function getRuasExcluidas(){
+  return Object.values(ruasLayers).filter(r=>r.status==='excluida');
+}
+
 // ── TABS ──────────────────────────────────────────────────────
 // ── TIPO BAIRRO + TURNO ───────────────────────────────────────
 let tipoDensidade = 8000; // default: popular denso
@@ -286,14 +452,19 @@ function showTab(t){
 }
 
 function sincronizarPerimetro(){
-  // Remove perimetro antigo
   if(perimRefL){mapC.removeLayer(perimRefL);perimRefL=null;}
   if(bPts.length<3) return;
-  // Desenha perimetro do bairro no mapa circuito
   perimRefL=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.05,dashArray:'4,4'}).addTo(mapC);
-  // Centraliza no bairro
   const bounds=L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1])));
   mapC.fitBounds(bounds,{padding:[20,20]});
+
+  // Draw obrigatorias as green reference lines
+  mapC.eachLayer(l=>{if(l._ruaRef)mapC.removeLayer(l);});
+  getRuasObrigatorias().forEach(r=>{
+    const l=L.polyline(r.pts,{color:'#4CAF50',weight:3,opacity:0.6,dashArray:'8,4'}).addTo(mapC);
+    l._ruaRef=true;
+    if(r.nome)l.bindTooltip(r.nome+' (obrigatória)',{sticky:true,opacity:0.9});
+  });
 }
 
 // ── STATUS ────────────────────────────────────────────────────
