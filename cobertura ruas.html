@@ -649,12 +649,12 @@ function populaDados(d){
     `Em <strong>${d.horas}h</strong> você consegue dar <strong>${d.voltas} volta${d.voltas!==1?'s':''}</strong> pelo circuito definido.<br>`+
     `Cada volta: <strong>${d.voltaKm.toFixed(1)}km</strong> em <strong>${fmtT(d.voltaHr)}</strong>.`;
   // OTH calculation
-  const areaCoberta = d.voltaKm * 0.08; // km² (faixa 40m cada lado)
+  const areaCoberta = d.voltaKm * 0.08;
   const othPorVolta = Math.round(areaCoberta * tipoDensidade * turnoFator);
   const othTotal    = Math.round(othPorVolta * d.voltas);
   const potencial   = Math.round(d.areaKm2 * tipoDensidade);
+  const alcancePct  = Math.round((othTotal/potencial)*100);
 
-  // Add OTH section if not exists
   let othSection = document.getElementById('d-oth');
   if(!othSection){
     othSection = document.createElement('div');
@@ -662,21 +662,26 @@ function populaDados(d){
     othSection.className = 'd-section';
     document.getElementById('d-verdict').before(othSection);
   }
-  othSection.innerHTML = \`
-    <div class="d-title">OTH — Oportunidade de Ouvir</div>
-    <div class="d-grid">
-      <div class="d-cell"><div class="d-lbl">Potencial bairro</div><div class="d-val bl">~\${potencial.toLocaleString('pt-BR')}<span>pessoas</span></div></div>
-      <div class="d-cell"><div class="d-lbl">OTH por volta</div><div class="d-val gr">~\${othPorVolta.toLocaleString('pt-BR')}<span>pessoas</span></div></div>
-      <div class="d-cell"><div class="d-lbl">OTH total (\${d.voltas} voltas)</div><div class="d-val or" style="font-size:22px">~\${othTotal.toLocaleString('pt-BR')}<span>pessoas</span></div></div>
-      <div class="d-cell"><div class="d-lbl">Alcance/potencial</div><div class="d-val gr">\${Math.round((othTotal/potencial)*100)}<span>%</span></div></div>
-    </div>
-    <div style="padding:8px 12px;font-size:9px;color:var(--muted);border-top:1px solid var(--border)">
-      Tipo: \${TIPOS[tipoIdx].label} (\${tipoDensidade.toLocaleString('pt-BR')} hab/km²) · Turno: \${TURNOS[turnoIdx].label} (fator \${turnoFator}) · Raio sonoro: 40m
-    </div>
-  \`;
 
-  document.getElementById('dSub').innerHTML=
-    \`Área: \${d.areaKm2.toFixed(2)} km² · \${d.nPts} waypoints · \${d.viaRua?'OSRM real':'estimativa'} · Metodologia OTH baseada em dados IBGE Censo 2022\`;
+  othSection.innerHTML =
+    '<div class="d-title">OTH — Oportunidade de Ouvir</div>' +
+    '<div class="d-grid">' +
+      '<div class="d-cell"><div class="d-lbl">Potencial bairro</div>' +
+        '<div class="d-val bl">~' + potencial.toLocaleString('pt-BR') + '<span>pessoas</span></div></div>' +
+      '<div class="d-cell"><div class="d-lbl">OTH por volta</div>' +
+        '<div class="d-val gr">~' + othPorVolta.toLocaleString('pt-BR') + '<span>pessoas</span></div></div>' +
+      '<div class="d-cell"><div class="d-lbl">OTH total (' + d.voltas + ' voltas)</div>' +
+        '<div class="d-val or" style="font-size:22px">~' + othTotal.toLocaleString('pt-BR') + '<span>pessoas</span></div></div>' +
+      '<div class="d-cell"><div class="d-lbl">Alcance/potencial</div>' +
+        '<div class="d-val gr">' + alcancePct + '<span>%</span></div></div>' +
+    '</div>' +
+    '<div style="padding:8px 12px;font-size:9px;color:var(--muted);border-top:1px solid var(--border)">' +
+      'Tipo: ' + TIPOS[tipoIdx].label + ' (' + tipoDensidade.toLocaleString('pt-BR') + ' hab/km²) · ' +
+      'Turno: ' + TURNOS[turnoIdx].label + ' (fator ' + turnoFator + ') · Raio sonoro: 40m' +
+    '</div>';
+
+    document.getElementById('dSub').innerHTML=
+    `Área: \${d.areaKm2.toFixed(2)} km² · \${d.nPts} waypoints · \${d.viaRua?'OSRM real':'estimativa'} · Metodologia OTH baseada em dados IBGE Censo 2022`;
 }
 
 
