@@ -99,7 +99,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.6</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v3.8</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -139,6 +139,23 @@ input:focus{border-color:var(--am)}
     <input type="file" id="importFile" accept=".geojson,.json" style="display:none" onchange="importBairro(event)"/>
     <button class="btn danger" style="margin-left:auto" onclick="limparBairro()">🗑</button>
   </div>
+  <div id="tipo-row" style="display:none;background:var(--panel2);border-bottom:1px solid var(--border);padding:8px 10px;flex-shrink:0">
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">TIPO DO BAIRRO</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn on" id="tp1" onclick="setTipo(1)">🏘 Popular denso</button>
+      <button class="btn"    id="tp2" onclick="setTipo(2)">🏠 Residencial</button>
+      <button class="btn"    id="tp3" onclick="setTipo(3)">🌿 Espaçado</button>
+    </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:10px;margin-bottom:6px">TURNO DA VEICULAÇÃO</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn"    id="tr1" onclick="setTurno(1)">🌅 Manhã</button>
+      <button class="btn"    id="tr2" onclick="setTurno(2)">☀️ Tarde</button>
+      <button class="btn on" id="tr3" onclick="setTurno(3)">🌆 Final tarde</button>
+      <button class="btn"    id="tr4" onclick="setTurno(4)">📅 Fim de semana</button>
+    </div>
+    <div id="oth-preview" style="font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:1px"></div>
+  </div>
+
   <div class="map-wrap"><div id="map-bairro"></div></div>
   <div id="pronto-banner" class="banner">
     <div id="pronto-info"></div>
@@ -219,6 +236,42 @@ let reorderIdx=null;
 let perimRefL=null;
 
 // ── TABS ──────────────────────────────────────────────────────
+// ── TIPO BAIRRO + TURNO ───────────────────────────────────────
+let tipoDensidade = 8000; // default: popular denso
+let turnoFator    = 0.65; // default: final tarde
+let tipoIdx       = 1;
+let turnoIdx      = 3;
+
+const TIPOS = {
+  1: {label:'Popular denso',   dens:8000},
+  2: {label:'Residencial',     dens:4000},
+  3: {label:'Espaçado',        dens:1500},
+};
+const TURNOS = {
+  1: {label:'Manhã (08h–11h30)',      fator:0.40},
+  2: {label:'Tarde (13h–17h)',         fator:0.35},
+  3: {label:'Final tarde (17h–20h)',   fator:0.65},
+  4: {label:'Fim de semana',           fator:0.80},
+};
+
+function setTipo(n){
+  tipoIdx=n; tipoDensidade=TIPOS[n].dens;
+  [1,2,3].forEach(i=>document.getElementById('tp'+i).className='btn'+(i===n?' on':''));
+  atualizarOthPreview();
+}
+function setTurno(n){
+  turnoIdx=n; turnoFator=TURNOS[n].fator;
+  [1,2,3,4].forEach(i=>document.getElementById('tr'+i).className='btn'+(i===n?' on':''));
+  atualizarOthPreview();
+}
+function atualizarOthPreview(){
+  const a=bPts.length>=3?polyAreaKm2(bPts):0;
+  if(a<=0){document.getElementById('oth-preview').textContent='';return;}
+  const potencial=Math.round(a*tipoDensidade);
+  document.getElementById('oth-preview').textContent=
+    `Potencial: ~${potencial.toLocaleString('pt-BR')} pessoas · ${TIPOS[tipoIdx].label} · ${TURNOS[turnoIdx].label}`;
+}
+
 function showTab(t){
   ['bairro','circuito','dados'].forEach(n=>{
     document.getElementById('tab-'+n).classList.toggle('show',n===t);
@@ -256,8 +309,16 @@ function polyAreaKm2(p){
 function updateBadge(){
   const a=bPts.length>=3?polyAreaKm2(bPts):0;
   document.getElementById('area-badge').textContent=a>0?`▣ ${a.toFixed(2)} km²`:'';
-  if(a>0){document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² — pronto`;document.getElementById('pronto-banner').classList.add('show');}
-  else document.getElementById('pronto-banner').classList.remove('show');
+  if(a>0){
+    document.getElementById('pronto-info').textContent=`${a.toFixed(2)} km² — pronto`;
+    document.getElementById('pronto-banner').classList.add('show');
+    document.getElementById('tipo-row').style.display='block';
+    atualizarOthPreview();
+  } else {
+    document.getElementById('pronto-banner').classList.remove('show');
+    document.getElementById('tipo-row').style.display='none';
+    document.getElementById('oth-preview').textContent='';
+  }
 }
 
 // ── GPS ───────────────────────────────────────────────────────
@@ -587,8 +648,35 @@ function populaDados(d){
     `<strong>${c}${camp}</strong><br>`+
     `Em <strong>${d.horas}h</strong> você consegue dar <strong>${d.voltas} volta${d.voltas!==1?'s':''}</strong> pelo circuito definido.<br>`+
     `Cada volta: <strong>${d.voltaKm.toFixed(1)}km</strong> em <strong>${fmtT(d.voltaHr)}</strong>.`;
+  // OTH calculation
+  const areaCoberta = d.voltaKm * 0.08; // km² (faixa 40m cada lado)
+  const othPorVolta = Math.round(areaCoberta * tipoDensidade * turnoFator);
+  const othTotal    = Math.round(othPorVolta * d.voltas);
+  const potencial   = Math.round(d.areaKm2 * tipoDensidade);
+
+  // Add OTH section if not exists
+  let othSection = document.getElementById('d-oth');
+  if(!othSection){
+    othSection = document.createElement('div');
+    othSection.id = 'd-oth';
+    othSection.className = 'd-section';
+    document.getElementById('d-verdict').before(othSection);
+  }
+  othSection.innerHTML = \`
+    <div class="d-title">OTH — Oportunidade de Ouvir</div>
+    <div class="d-grid">
+      <div class="d-cell"><div class="d-lbl">Potencial bairro</div><div class="d-val bl">~\${potencial.toLocaleString('pt-BR')}<span>pessoas</span></div></div>
+      <div class="d-cell"><div class="d-lbl">OTH por volta</div><div class="d-val gr">~\${othPorVolta.toLocaleString('pt-BR')}<span>pessoas</span></div></div>
+      <div class="d-cell"><div class="d-lbl">OTH total (\${d.voltas} voltas)</div><div class="d-val or" style="font-size:22px">~\${othTotal.toLocaleString('pt-BR')}<span>pessoas</span></div></div>
+      <div class="d-cell"><div class="d-lbl">Alcance/potencial</div><div class="d-val gr">\${Math.round((othTotal/potencial)*100)}<span>%</span></div></div>
+    </div>
+    <div style="padding:8px 12px;font-size:9px;color:var(--muted);border-top:1px solid var(--border)">
+      Tipo: \${TIPOS[tipoIdx].label} (\${tipoDensidade.toLocaleString('pt-BR')} hab/km²) · Turno: \${TURNOS[turnoIdx].label} (fator \${turnoFator}) · Raio sonoro: 40m
+    </div>
+  \`;
+
   document.getElementById('dSub').innerHTML=
-    `Área: ${d.areaKm2.toFixed(2)} km² · Cobertura est.: ~${d.pct}% · ${d.nPts} waypoints · ${d.viaRua?'OSRM real':'estimativa'}`;
+    \`Área: \${d.areaKm2.toFixed(2)} km² · \${d.nPts} waypoints · \${d.viaRua?'OSRM real':'estimativa'} · Metodologia OTH baseada em dados IBGE Censo 2022\`;
 }
 
 
@@ -603,19 +691,24 @@ async function gerarAuto(){
   const lats=bPts.map(p=>p[0]),lons=bPts.map(p=>p[1]);
   const polyStr=bPts.map(p=>`${p[0].toFixed(6)} ${p[1].toFixed(6)}`).join(' ');
 
-  // Overpass: busca todas as vias dentro do polígono
-  const q=`[out:json][timeout:25];(way(poly:"${polyStr}")[highway][highway!~"^(motorway|trunk|motorway_link|trunk_link|footway|path|steps|cycleway|pedestrian|proposed|construction)$"];);out geom;`;
+  // Overpass: busca vias dentro do polígono (query simplificada)
+  const q=`[out:json][timeout:30];way(poly:"${polyStr}")[highway~"^(residential|secondary|tertiary|unclassified|living_street|service|road|primary)$"];out geom;`;
 
+  const SERVERS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
   let elements=[];
-  try{
-    const res=await fetch('https://overpass-api.de/api/interpreter',{
-      method:'POST',body:'data='+encodeURIComponent(q),
-      signal:AbortSignal.timeout(25000)
-    });
-    const data=await res.json();
-    elements=data.elements||[];
-  }catch(e){
-    cSt('Erro Overpass — tente novamente','r');
+  let ok=false;
+  for(const srv of SERVERS){
+    try{
+      cSt(`Buscando ruas (${srv.includes('kumi')?'servidor 2':'servidor 1'})...`,'y');
+      const res=await fetch(srv,{method:'POST',body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(30000)});
+      if(!res.ok)continue;
+      const data=await res.json();
+      elements=data.elements||[];
+      ok=true;break;
+    }catch(e){continue;}
+  }
+  if(!ok||!elements.length){
+    cSt('Erro ao buscar ruas — verifique conexão ou reduza a área do bairro','r');
     resetAutoBtn();return;
   }
 
