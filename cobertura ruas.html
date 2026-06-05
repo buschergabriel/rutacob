@@ -100,7 +100,7 @@ input:focus{border-color:var(--am)}
 
 <div id="hdr">
   <div id="hdr-top">
-    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v4.3</div></div>
+    <div><div class="logo">AUTOVISION</div><div class="sub">PLANEJADOR DE ROTA v4.5</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="area-badge"></div>
       <button class="btn sm" onclick="irGPS()">📍</button>
@@ -161,7 +161,7 @@ input:focus{border-color:var(--am)}
   <div class="map-wrap"><div id="map-bairro"></div></div>
   <div id="pronto-banner" class="banner">
     <div id="pronto-info"></div>
-    <button class="btn green" onclick="showTab('circuito')">▶ IR PARA CIRCUITO</button>
+    <button class="btn green" onclick="showTab('ruas')">▶ IR PARA RUAS</button>
   </div>
   <div class="statusbar"><div class="dot" id="bDot"></div><span id="bSt">Busque um bairro para começar</span></div>
 </div>
@@ -186,7 +186,7 @@ input:focus{border-color:var(--am)}
     <div style="font-size:9px;background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:2px">Toque novamente = Normal</div>
   </div>
   <div class="map-wrap"><div id="map-ruas"></div></div>
-  <div id="ruas-pronto-banner" style="display:none;background:#001A00;border-top:1px solid var(--green);padding:8px 12px;flex-shrink:0;display:none;gap:8px;align-items:center">
+  <div id="ruas-pronto-banner" style="display:none;background:#001A00;border-top:1px solid var(--green);padding:8px 12px;flex-shrink:0;gap:8px;align-items:center">
     <div id="ruas-pronto-info" style="font-size:11px;color:var(--green);flex:1"></div>
     <button class="btn green" onclick="showTab('circuito')">▶ IR PARA CIRCUITO</button>
   </div>
@@ -245,12 +245,25 @@ input:focus{border-color:var(--am)}
 <script>
 const SPD=15;
 const mapB=L.map('map-bairro',  {zoomControl:true,attributionControl:false});
-const mapC=L.map('map-circuito',{zoomControl:true,attributionControl:false});
 const TILES='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 L.tileLayer(TILES,{maxZoom:19}).addTo(mapB);
-L.tileLayer(TILES,{maxZoom:19}).addTo(mapC);
 mapB.setView([-30.05,-51.17],13);
-mapC.setView([-30.05,-51.17],13);
+
+// mapC and mapR initialized lazily when their tabs are first opened
+let mapC=null,mapR=null;
+function initMapC(){
+  if(mapC)return;
+  mapC=L.map('map-circuito',{zoomControl:true,attributionControl:false});
+  L.tileLayer(TILES,{maxZoom:19}).addTo(mapC);
+  mapC.setView([-30.05,-51.17],13);
+  setupMapCClick();
+}
+function initMapR(){
+  if(mapR)return;
+  mapR=L.map('map-ruas',{zoomControl:true,attributionControl:false});
+  L.tileLayer(TILES,{maxZoom:19}).addTo(mapR);
+  mapR.setView([-30.05,-51.17],14);
+}
 
 // STATE
 let bPts=[],bMode='add',bPolyL=null,bVtx=[],gpsMkr=null;
@@ -266,10 +279,6 @@ let perimRefL=null;
 
 
 // ── MAP RUAS ──────────────────────────────────────────────────
-const mapR = L.map('map-ruas',{zoomControl:true,attributionControl:false});
-L.tileLayer(TILES,{maxZoom:19}).addTo(mapR);
-mapR.setView([-30.05,-51.17],14);
-
 let ruasLayers={}; // id -> {layer, status: 'normal'|'obrig'|'excluida', data}
 let perimRuasL=null;
 
@@ -440,18 +449,29 @@ function atualizarOthPreview(){
 }
 
 function showTab(t){
-  ['bairro','circuito','dados'].forEach(n=>{
-    document.getElementById('tab-'+n).classList.toggle('show',n===t);
-    document.getElementById('tab-btn-'+n).classList.toggle('active',n===t);
+  ['bairro','ruas','circuito','dados'].forEach(n=>{
+    const p=document.getElementById('tab-'+n);
+    const b=document.getElementById('tab-btn-'+n);
+    if(p) p.classList.toggle('show',n===t);
+    if(b) b.classList.toggle('active',n===t);
   });
-  if(t==='bairro') setTimeout(()=>mapB.invalidateSize(),60);
+  if(t==='bairro') setTimeout(()=>mapB.invalidateSize(),80);
+  if(t==='ruas') setTimeout(()=>{
+    initMapR();
+    mapR.invalidateSize();
+    if(bPts.length>=3&&!perimRuasL){
+      mapR.fitBounds(L.latLngBounds(bPts.map(p=>L.latLng(p[0],p[1]))),{padding:[20,20]});
+    }
+  },80);
   if(t==='circuito') setTimeout(()=>{
+    initMapC();
     mapC.invalidateSize();
     sincronizarPerimetro();
-  },60);
+  },80);
 }
 
 function sincronizarPerimetro(){
+  initMapC();
   if(perimRefL){mapC.removeLayer(perimRefL);perimRefL=null;}
   if(bPts.length<3) return;
   perimRefL=L.polygon(bPts,{color:'#F5C800',weight:1.5,fillColor:'#F5C800',fillOpacity:0.05,dashArray:'4,4'}).addTo(mapC);
@@ -672,12 +692,17 @@ function ptInPoly(pt,poly){
 }
 
 // ── WAYPOINTS ─────────────────────────────────────────────────
-mapC.on('click',e=>{
-  if(cMode==='add'){adicionarWaypoint(e.latlng.lat,e.latlng.lng);}
-  else if(cMode==='start'){definirInicio(e.latlng.lat,e.latlng.lng);}
-});
-
-function adicionarWaypoint(lat,lng){
+// mapC click setup deferred
+function setupMapCClick(){
+  if(!mapC||mapC._clickSetup)return;
+  mapC._clickSetup=true;
+  mapC.on('click',e=>{
+    if(cMode==='add'){adicionarWaypoint(e.latlng.lat,e.latlng.lng);}
+    else if(cMode==='start'){definirInicio(e.latlng.lat,e.latlng.lng);}
+  });
+  
+  
+}function adicionarWaypoint(lat,lng){
   waypoints.push({lat,lng});
   renderWaypoints();
   cSt(`${waypoints.length} waypoints — ▶ GERAR para calcular rota`,'');
@@ -785,6 +810,7 @@ function fecharReorder(){reorderIdx=null;document.getElementById('reorder-popup'
 
 // ── GERAR ROTA ────────────────────────────────────────────────
 async function gerarRota(){
+  initMapC();
   const allPts=startPt?[startPt,...waypoints]:waypoints;
   if(allPts.length<2){cSt('Adicione pelo menos 2 waypoints','r');return;}
   const horas=parseFloat(document.getElementById('iHoras').value)||3;
@@ -840,6 +866,7 @@ function haversine(a,b){
 function fmtT(h){const hh=Math.floor(h),mm=Math.round((h-hh)*60);if(mm===60)return`${hh+1}h00`;return hh>0?`${hh}h${String(mm).padStart(2,'0')}`:`${mm}min`;}
 
 function limparCircuito(){
+  initMapC();
   waypoints=[];startPt=null;
   if(startMkr)mapC.removeLayer(startMkr);startMkr=null;
   if(routeLayer)mapC.removeLayer(routeLayer);routeLayer=null;
