@@ -682,7 +682,7 @@ function confirmarBairro(){
   if(bPts.length>1){const[f,l]=[bPts[0],bPts[bPts.length-1]];if(Math.abs(f[0]-l[0])<0.00001&&Math.abs(f[1]-l[1])<0.00001)bPts.pop();}
   bRedraw();
   document.getElementById('confirm-banner').classList.remove('show');
-  bSt('"'+pendingName+'" aplicado','g');pendingGeo=null;
+  bSt('"'+pendingName+'" aplicado','g');pendingGeo=null;salvarEstado();
 }
 function rejeitarBairro(){
   document.getElementById('confirm-banner').classList.remove('show');
@@ -1046,20 +1046,7 @@ function setupAutoSave(){
   setInterval(salvarEstado, 5000);
 }
 
-// Patch key functions to also save state
-const _origAddVeic = addVeic;
-// Override renderWaypoints to also save
-const _origRenderWaypoints = renderWaypoints;
-function renderWaypoints(){
-  _origRenderWaypoints();
-  salvarEstado();
-}
-// Override bRedraw to also save
-const _origBRedraw = bRedraw;
-function bRedraw(){
-  _origBRedraw();
-  salvarEstado();
-}
+// Auto-save integrated directly into functions
 
 // Restore on load
 window.addEventListener('load', ()=>{
@@ -1067,12 +1054,7 @@ window.addEventListener('load', ()=>{
   setupAutoSave();
 });
 
-// Also save when gerarRota finishes - patch via storing after route generated
-const _origGerarRota = gerarRota;
-async function gerarRota(){
-  await _origGerarRota();
-  salvarEstado();
-}
+
 
 
 </script>
