@@ -408,7 +408,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 
 <!-- MODAIS -->
-<div id="modal-overlay" class="modal-overlay hidden" onclick="fecharModal(event)">
+<div id="modal-overlay" class="modal-overlay hidden" onclick="if(event.target===this)fecharModal()">
   <div class="modal" id="modal-box">
     <div class="modal-title" id="modal-title">—</div>
     <div id="modal-body"></div>
@@ -593,17 +593,20 @@ function renderVeicModalBody(v){
       hfEl.addEventListener('change',function(){bloco.hf=hfEl.value;badgeEl.textContent=calcHorasDia(bloco.hi,bloco.hf)+'h';calcTotals();salvarEstado();});
     })(b,badge,hi,hf);
     rowT.appendChild(lbl);rowT.appendChild(hi);rowT.appendChild(sep);rowT.appendChild(hf);rowT.appendChild(badge);
-    // linha bairros
+    // linha bairros (opcional)
     var rowB=document.createElement('div');
     rowB.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:4px';
-    var inpB=document.createElement('input');inpB.type='text';inpB.value=b.bairros;inpB.placeholder='Bairros (Ex: Centro, Vila Nova)';inpB.style.cssText='flex:1;font-size:11px;padding:5px 7px';
+    var inpB=document.createElement('input');inpB.type='text';inpB.value=b.bairros;
+    inpB.placeholder='Bairros — opcional (ex: Centro, Vila Nova)';
+    inpB.style.cssText='flex:1;font-size:11px;padding:5px 7px';
     (function(bloco){inpB.addEventListener('input',function(){bloco.bairros=inpB.value;salvarEstado();});})(b);
-    // sugerir da lista de bairros salvos
     if(bairrosList.length){
       var btnSug=document.createElement('button');
       btnSug.className='btn sm';btnSug.textContent='📍';btnSug.title='Usar bairros salvos';
+      btnSug.type='button';
       (function(bloco,inp){
-        btnSug.addEventListener('click',function(){
+        btnSug.addEventListener('click',function(ev){
+          ev.preventDefault();ev.stopPropagation();
           var nomes=bairrosList.map(function(x){return x.nome;}).join(', ');
           bloco.bairros=nomes;inp.value=nomes;salvarEstado();
         });
@@ -612,21 +615,11 @@ function renderVeicModalBody(v){
     } else {
       rowB.appendChild(inpB);
     }
-    // linha circuito
-    var rowC=document.createElement('div');
-    rowC.style.cssText='display:flex;gap:6px;align-items:center';
-    var selC=document.createElement('select');selC.style.cssText='flex:1;font-size:10px;padding:4px 6px';
-    var optNone=document.createElement('option');optNone.value='';optNone.textContent='Circuito: nenhum';selC.appendChild(optNone);
-    circuitosBib.forEach(function(c){
-      var opt=document.createElement('option');opt.value=c.id;opt.textContent=c.nome+(c.lastData?' ('+c.lastData.voltaKm.toFixed(1)+'km)':'');
-      if(b.circuitoId===c.id)opt.selected=true;
-      selC.appendChild(opt);
-    });
-    (function(bloco){selC.addEventListener('change',function(){bloco.circuitoId=selC.value||null;salvarEstado();});})(b);
-    rowC.appendChild(selC);
     // remover bloco
+    var rowR=document.createElement('div');
+    rowR.style.cssText='display:flex;justify-content:flex-end';
     if(v.blocos.length>1){
-      var btnRem=document.createElement('button');btnRem.className='btn danger sm';btnRem.textContent='✕';
+      var btnRem=document.createElement('button');btnRem.className='btn danger sm';btnRem.textContent='✕ Remover bloco';btnRem.type='button';
       (function(vid,bid){
         btnRem.addEventListener('click',function(){
           var vv=veiculacoes.find(function(x){return x.id===vid;});
@@ -634,9 +627,9 @@ function renderVeicModalBody(v){
           calcTotals();salvarEstado();renderVeicModalBody(vv||v);
         });
       })(v.id,b.id);
-      rowC.appendChild(btnRem);
+      rowR.appendChild(btnRem);
     }
-    div.appendChild(rowT);div.appendChild(rowB);div.appendChild(rowC);
+    div.appendChild(rowT);div.appendChild(rowB);if(v.blocos.length>1)div.appendChild(rowR);
     body.appendChild(div);
   });
   // botão adicionar bloco
@@ -658,11 +651,12 @@ function renderVeicModalBody(v){
       fecharModal();renderCal();calcTotals();salvarEstado();
     });
   })(v.id);
-  var btnOk=document.createElement('button');btnOk.className='btn primary';btnOk.textContent='✓ OK';btnOk.addEventListener('click',fecharModal);
+  var btnOk=document.createElement('button');btnOk.className='btn primary';btnOk.textContent='✓ OK';btnOk.addEventListener('click',function(){fecharModal();});
   actions.appendChild(btnDel);actions.appendChild(btnOk);
 }
 function fecharModal(e){
-  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  // Se chamado pelo overlay (clique fora), só fecha se clicou no próprio overlay
+  if(e&&e.type==='click'&&e.currentTarget===document.getElementById('modal-overlay')&&e.target!==document.getElementById('modal-overlay'))return;
   document.getElementById('modal-overlay').classList.add('hidden');
   renderCal();calcTotals();
 }
@@ -791,16 +785,22 @@ function confirmarBairro(){
   pendingGeo=null;
 }
 function rejeitarBairro(){document.getElementById('confirm-banner').classList.remove('show');bSt('Rejeitado','');pendingGeo=null;}
-function salvarBairroNaLista(){
+function salvarBairroNaLista(nomeForced){
   if(bairroAtual.pts.length<3){bSt('Desenhe o perímetro primeiro','r');return;}
-  var nome=bairroAtual.name||prompt('Nome do bairro:')||('Bairro '+(bairrosList.length+1));
+  var nome=nomeForced||bairroAtual.name;
+  if(!nome){
+    abrirNomeModal('Nome do bairro','Ex: Centro Viamão',function(n){
+      salvarBairroNaLista(n||('Bairro '+(bairrosList.length+1)));
+    });
+    return;
+  }
   var existente=bairrosList.findIndex(function(b){return b.nome===nome;});
   var entry={id:'br'+Date.now(),nome:nome,pts:bairroAtual.pts.slice(),area:polyAreaKm2(bairroAtual.pts)};
   if(existente>=0) bairrosList[existente]=entry;
   else bairrosList.push(entry);
   renderBairrosLista();
   renderBairrosSalvosNoMapa();
-  bSt('"'+nome+'" salvo na lista','g');
+  bSt('"'+nome+'" salvo','g');
   salvarEstado();
 }
 function renderBairrosLista(){
@@ -1002,9 +1002,14 @@ async function gerarRota(){
   cSt(voltaKm.toFixed(1)+'km/volta · '+fmtT(voltaHr)+' · ▶ SALVAR circuito','g');
   salvarEstado();
 }
-function salvarCircuito(){
-  var nome=prompt('Nome do circuito (ex: Centro Viamão, São Lucas + Lisboa):');
-  if(!nome)return;
+function salvarCircuito(nomeForced){
+  if(!nomeForced){
+    abrirNomeModal('Nome do circuito','Ex: Centro Viamão, São Lucas + Lisboa',function(n){
+      if(n) salvarCircuito(n);
+    });
+    return;
+  }
+  var nome=nomeForced;
   var existente=circuitosBib.findIndex(function(c){return c.nome===nome;});
   var geomSerial=circAtivo.lastGeom?circAtivo.lastGeom.map(function(p){return[p.lat,p.lng];}):[];
   var entry={
@@ -1374,6 +1379,34 @@ window.addEventListener('load',function(){
   renderCal();
   setupAutoSave();
 });
+// ════ MINI-MODAL DE NOME (substitui prompt() — compatível iOS) ════
+function abrirNomeModal(titulo, placeholder, callback){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var box=document.createElement('div');
+  box.style.cssText='background:#141414;border:1px solid #1E1E1E;border-radius:4px;padding:20px;width:100%;max-width:340px';
+  var lbl=document.createElement('div');
+  lbl.textContent=titulo;
+  lbl.style.cssText='font-size:10px;letter-spacing:3px;color:#F5C800;text-transform:uppercase;margin-bottom:12px;font-family:Courier New,monospace';
+  var inp=document.createElement('input');
+  inp.type='text';inp.placeholder=placeholder;
+  inp.style.cssText='width:100%;font-size:13px;padding:10px;margin-bottom:12px;background:#0E0E0E;border:1px solid #2A2A2A;color:#E8E8E8;border-radius:2px;font-family:Courier New,monospace;box-sizing:border-box';
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;gap:8px';
+  var btnOk=document.createElement('button');
+  btnOk.textContent='✓ OK';btnOk.style.cssText='flex:1;padding:10px;background:#F5C800;border:none;border-radius:2px;font-weight:bold;font-family:Courier New,monospace;font-size:11px;cursor:pointer;color:#000';
+  var btnCan=document.createElement('button');
+  btnCan.textContent='Cancelar';btnCan.style.cssText='padding:10px 14px;background:#141414;border:1px solid #2A2A2A;border-radius:2px;color:#666;font-family:Courier New,monospace;font-size:11px;cursor:pointer';
+  function fechar(val){document.body.removeChild(overlay);if(val!==null)callback(val);}
+  btnOk.addEventListener('click',function(){fechar(inp.value.trim());});
+  btnCan.addEventListener('click',function(){fechar(null);});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')fechar(inp.value.trim());if(e.key==='Escape')fechar(null);});
+  row.appendChild(btnOk);row.appendChild(btnCan);
+  box.appendChild(lbl);box.appendChild(inp);box.appendChild(row);
+  overlay.appendChild(box);document.body.appendChild(overlay);
+  setTimeout(function(){inp.focus();},100);
+}
+
 </script>
 </body>
 </html>
