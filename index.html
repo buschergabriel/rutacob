@@ -49,7 +49,7 @@ textarea{min-height:auto;resize:none}
 .field-label{font-size:9px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase}
 .field-row{display:flex;gap:8px}.field-row input,.field-row select{flex:1}
 .map-wrap{flex:1;min-height:0;overflow:hidden;position:relative}
-.map-wrap>div{height:100%!important;width:100%!important}
+.map-wrap>div{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%}
 .status{background:var(--panel);border-top:1px solid var(--border);padding:7px 14px;font-size:11px;color:var(--muted2);letter-spacing:1px;flex-shrink:0;min-height:32px;display:flex;align-items:center;gap:8px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .dot.g{background:var(--green);box-shadow:0 0 6px var(--green)}
@@ -263,6 +263,10 @@ textarea{min-height:auto;resize:none}
 
 <!-- ③ CIRCUITO -->
 <div id="p-circ" class="panel">
+  <div class="row" style="gap:6px">
+    <button class="btn sm on" id="cModeManual" onclick="setCircuitoMode('manual')">MANUAL</button>
+    <button class="btn sm" id="cModeAuto" onclick="setCircuitoMode('auto')">AUTOMÁTICO</button>
+  </div>
   <div class="row">
     <button class="btn on-start" id="cBtnStart" onclick="setCMode('start')">&#8857;</button>
     <button class="btn"          id="cBtnAdd"   onclick="setCMode('add')">&#10010;</button>
@@ -277,6 +281,15 @@ textarea{min-height:auto;resize:none}
     <div id="circ-biblioteca"></div>
   </div>
   <div class="map-wrap"><div id="map-circ"></div></div>
+  <div id="circ-auto-wrap" style="display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden">
+    <div class="scroll-content" style="padding:10px">
+      <div style="font-size:9px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Ruas — maior pra menor</div>
+      <div id="ruas-ranking-lista"></div>
+      <button class="btn primary full" style="margin-top:12px" onclick="gerarOpcoesInicio()">GERAR OPÇÕES DE INÍCIO</button>
+      <div style="font-size:9px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin:16px 0 6px">Opções de início</div>
+      <div id="opcoes-inicio-lista"></div>
+    </div>
+  </div>
   <div class="status"><div class="dot" id="cDot"></div><span id="cStTxt">Marque o início e adicione waypoints</span></div>
 </div>
 
@@ -497,26 +510,7 @@ function goTab(t){
     document.getElementById('p-'+n).classList.toggle('show',n===t);
     document.getElementById('t-'+n).classList.toggle('active',n===t);
   });
-  if(t==='bairros') setTimeout(function(){
-    initMapB();
-    if(mapB){mapB.invalidateSize();bRedraw();}
-    var mw=document.querySelector('#p-bairros .map-wrap');
-    var mb=document.getElementById('map-bairro');
-    var rw=mw?mw.getBoundingClientRect():null;
-    var rb=mb?mb.getBoundingClientRect():null;
-    var dbg=document.getElementById('err-banner');
-    if(dbg){
-      dbg.style.display='block';
-      dbg.style.background='#001A33';dbg.style.color='#AACCFF';dbg.style.borderColor='#3399FF';
-      dbg.textContent='DIAGNOSTICO BAIRROS:\n'
-        +'typeof L = '+(typeof L)+'\n'
-        +'mapB = '+(mapB?'criado':'NULL')+'\n'
-        +'map-wrap tamanho = '+(rw?Math.round(rw.width)+'x'+Math.round(rw.height):'elemento nao encontrado')+'\n'
-        +'map-bairro tamanho = '+(rb?Math.round(rb.width)+'x'+Math.round(rb.height):'elemento nao encontrado')+'\n'
-        +'map-bairro filhos = '+(mb?mb.children.length:'n/a')+'\n'
-        +'map-bairro classes = '+(mb?mb.className:'n/a');
-    }
-  },80);
+  if(t==='bairros') setTimeout(function(){initMapB();if(mapB){mapB.invalidateSize();bRedraw();}},80);
   if(t==='circ')    setTimeout(function(){initMapC();if(mapC){mapC.invalidateSize();syncCircMapa();}},80);
   if(t==='criativo') renderCriativosBib();
   if(t==='crono')   renderCrono();
@@ -974,6 +968,10 @@ function importBairro(ev){
 
 // ════ CIRCUITO ════
 var STREET_COLORS=[{min:400,color:'#FF4444',weight:4},{min:150,color:'#F5A623',weight:2.5},{min:0,color:'#888',weight:1.5}];
+var ruasAgregadas=[]; // [{name,totalLen,segments,extA,extB}], ordenado desc por totalLen
+var ruasSelNomes={}; // map nome->true para checkboxes do modo automatico
+var circOpcoesInicio=[]; // 4 (ou menos) candidatos de inicio calculados
+var circuitoModoAuto=false;
 function syncCircMapa(){
   if(!mapC)return;
   perimCircLayers.forEach(function(l){mapC.removeLayer(l);});perimCircLayers=[];
@@ -989,6 +987,36 @@ function syncCircMapa(){
     if(!streetsLayer)loadStreets();
   }
   renderWaypoints();renderCircBiblioteca();
+}
+function distFlat(a,b){ // [lat,lon] -> metros, aproximacao local (mesma formula usada no resto do app)
+  var dLat=(b[0]-a[0])*111320, dLon=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);
+  return Math.sqrt(dLat*dLat+dLon*dLon);
+}
+function aggregateRuas(elements){
+  var groups={};
+  elements.forEach(function(way,idx){
+    if(!way.geometry||way.geometry.length<2)return;
+    var name=(way.tags&&way.tags.name)?way.tags.name:'__sem_nome_'+idx;
+    if(!groups[name])groups[name]={name:name,segments:[],totalLen:0};
+    var pts=way.geometry.map(function(pt){return[pt.lat,pt.lon];});
+    var len=0;
+    for(var i=0;i<pts.length-1;i++)len+=distFlat(pts[i],pts[i+1]);
+    groups[name].segments.push(pts);
+    groups[name].totalLen+=len;
+  });
+  var ruas=Object.values(groups).map(function(g){
+    var allPts=[];g.segments.forEach(function(s){allPts=allPts.concat(s);});
+    var best=0,extA=allPts[0],extB=allPts[0];
+    for(var i=0;i<allPts.length;i++){
+      for(var j=i+1;j<allPts.length;j++){
+        var d=distFlat(allPts[i],allPts[j]);
+        if(d>best){best=d;extA=allPts[i];extB=allPts[j];}
+      }
+    }
+    return {name:g.name,totalLen:g.totalLen,segments:g.segments,extA:extA,extB:extB};
+  });
+  ruas.sort(function(a,b){return b.totalLen-a.totalLen;});
+  return ruas;
 }
 async function loadStreets(){
   if(!bairrosList.length||!mapC)return;
@@ -1006,18 +1034,141 @@ async function loadStreets(){
     }catch(e){continue;}
   }
   if(!elements.length)return;
+  ruasAgregadas=aggregateRuas(elements);
   if(streetsLayer){mapC.removeLayer(streetsLayer);streetsLayer=null;}
   var group=L.layerGroup();
-  elements.forEach(function(way){
-    if(!way.geometry||way.geometry.length<2)return;
-    var pts=way.geometry.map(function(pt){return[pt.lat,pt.lon];});
-    var len=0;
-    for(var i=0;i<pts.length-1;i++){var la=pts[i][0],lo=pts[i][1],lb=pts[i+1][0],lp=pts[i+1][1];var dLat=(lb-la)*111320,dLon=(lp-lo)*111320*Math.cos(la*Math.PI/180);len+=Math.sqrt(dLat*dLat+dLon*dLon);}
-    var style=STREET_COLORS.find(function(s){return len>=s.min;})||STREET_COLORS[STREET_COLORS.length-1];
-    L.polyline(pts,{color:style.color,weight:style.weight,opacity:0.7}).addTo(group);
+  ruasAgregadas.forEach(function(r){
+    var style=STREET_COLORS.find(function(s){return r.totalLen>=s.min;})||STREET_COLORS[STREET_COLORS.length-1];
+    r.segments.forEach(function(pts){
+      L.polyline(pts,{color:style.color,weight:style.weight,opacity:0.7}).addTo(group);
+    });
   });
   streetsLayer=group;group.addTo(mapC);
-  cSt('Ruas: longos medios curtos','g');
+  renderRuasRanking();
+  cSt('Ruas: longas medias curtas','g');
+}
+function renderRuasRanking(){
+  var el=document.getElementById('ruas-ranking-lista');if(!el)return;
+  el.innerHTML='';
+  if(!ruasAgregadas.length){el.innerHTML='<span style="font-size:10px;color:var(--muted)">Sem ruas carregadas — abra o modo manual uma vez para o app buscar as ruas do bairro</span>';return;}
+  ruasAgregadas.forEach(function(r){
+    var row=document.createElement('label');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)';
+    var chk=document.createElement('input');chk.type='checkbox';chk.style.cssText='width:18px;height:18px;flex-shrink:0';
+    chk.checked=!!ruasSelNomes[r.name];
+    chk.addEventListener('change',function(){ruasSelNomes[r.name]=chk.checked;});
+    var span=document.createElement('span');span.style.flex='1';
+    span.textContent=(r.name.indexOf('__sem_nome_')===0?'(sem nome)':r.name);
+    var km=document.createElement('span');km.style.cssText='color:var(--muted);font-size:10px;flex-shrink:0';
+    km.textContent=r.totalLen>=1000?(r.totalLen/1000).toFixed(2)+'km':Math.round(r.totalLen)+'m';
+    row.appendChild(chk);row.appendChild(span);row.appendChild(km);
+    el.appendChild(row);
+  });
+}
+function nearestExtremidade(corner,ruas){
+  var best=null,bestD=Infinity,bestIsA=true;
+  ruas.forEach(function(r){
+    var dA=distFlat(corner,r.extA), dB=distFlat(corner,r.extB);
+    if(dA<bestD){bestD=dA;best=r;bestIsA=true;}
+    if(dB<bestD){bestD=dB;best=r;bestIsA=false;}
+  });
+  return {street:best, point: bestIsA?best.extA:best.extB};
+}
+function chainFromStart(ruasSelecionadas, startPoint, startStreetName){
+  var pendentes=ruasSelecionadas.filter(function(r){return r.name!==startStreetName;});
+  var startStreet=ruasSelecionadas.find(function(r){return r.name===startStreetName;});
+  var ordered=[startPoint];
+  var exitInicial=(distFlat(startStreet.extA,startPoint)<distFlat(startStreet.extB,startPoint))?startStreet.extB:startStreet.extA;
+  ordered.push(exitInicial);
+  var current=exitInicial;
+  while(pendentes.length){
+    var bestIdx=-1,bestD=Infinity,bestIsA=true;
+    pendentes.forEach(function(r,i){
+      var dA=distFlat(current,r.extA), dB=distFlat(current,r.extB);
+      if(dA<bestD){bestD=dA;bestIdx=i;bestIsA=true;}
+      if(dB<bestD){bestD=dB;bestIdx=i;bestIsA=false;}
+    });
+    var r=pendentes[bestIdx];
+    var entry=bestIsA?r.extA:r.extB, exit=bestIsA?r.extB:r.extA;
+    ordered.push(entry,exit);
+    current=exit;
+    pendentes.splice(bestIdx,1);
+  }
+  ordered.push(startPoint);
+  var totalKm=0;
+  for(var i=0;i<ordered.length-1;i++)totalKm+=distFlat(ordered[i],ordered[i+1]);
+  totalKm/=1000;
+  return {points:ordered, estKm:totalKm};
+}
+function boundingBoxPts(pts){
+  var lats=pts.map(function(p){return p[0];}), lons=pts.map(function(p){return p[1];});
+  return {minLat:Math.min.apply(null,lats),maxLat:Math.max.apply(null,lats),minLon:Math.min.apply(null,lons),maxLon:Math.max.apply(null,lons)};
+}
+function gerarOpcoesInicio(){
+  var sel=ruasAgregadas.filter(function(r){return ruasSelNomes[r.name];});
+  if(!sel.length){cSt('Selecione pelo menos 1 rua','r');return;}
+  var allExtPts=[];sel.forEach(function(r){allExtPts.push(r.extA,r.extB);});
+  var bb=boundingBoxPts(allExtPts);
+  var corners=[
+    {label:'Canto NO',pt:[bb.maxLat,bb.minLon]},
+    {label:'Canto NE',pt:[bb.maxLat,bb.maxLon]},
+    {label:'Canto SO',pt:[bb.minLat,bb.minLon]},
+    {label:'Canto SE',pt:[bb.minLat,bb.maxLon]}
+  ];
+  var opcoes=[],seen={};
+  corners.forEach(function(c){
+    var snap=nearestExtremidade(c.pt,sel);
+    var key=snap.point[0].toFixed(6)+','+snap.point[1].toFixed(6);
+    if(seen[key])return;
+    seen[key]=true;
+    var chain=chainFromStart(sel,snap.point,snap.street.name);
+    opcoes.push({label:c.label,startStreet:snap.street.name,points:chain.points,estKm:chain.estKm});
+  });
+  circOpcoesInicio=opcoes;
+  renderOpcoesInicio();
+}
+function renderOpcoesInicio(){
+  var el=document.getElementById('opcoes-inicio-lista');if(!el)return;
+  el.innerHTML='';
+  if(!circOpcoesInicio.length){el.innerHTML='<span style="font-size:10px;color:var(--muted)">Nenhuma opcao gerada</span>';return;}
+  var info=document.createElement('div');
+  info.style.cssText='font-size:10px;color:var(--muted2);margin-bottom:8px;line-height:1.5';
+  info.textContent=circOpcoesInicio.length<4?(circOpcoesInicio.length+' opcoes unicas (bairro estreito gera menos cantos distintos) — distancia aproximada em linha reta, a real sai no GERAR:'):'4 opcoes — distancia aproximada em linha reta, a real sai no GERAR:';
+  el.appendChild(info);
+  circOpcoesInicio.forEach(function(o,i){
+    var card=document.createElement('button');
+    card.className='btn';
+    card.style.cssText='width:100%;text-align:left;margin-bottom:6px;padding:10px 12px;display:block';
+    card.innerHTML='<b>'+o.label+'</b> — perto de '+o.startStreet+'<br><span style="font-size:10px;color:var(--muted)">~'+o.estKm.toFixed(2)+'km em linha reta</span>';
+    card.addEventListener('click',function(){escolherOpcaoInicio(i);});
+    el.appendChild(card);
+  });
+}
+function escolherOpcaoInicio(idx){
+  var o=circOpcoesInicio[idx];if(!o)return;
+  var pts=o.points;
+  circAtivo.startPt={lat:pts[0][0],lng:pts[0][1]};
+  circAtivo.waypoints=pts.slice(1).map(function(p){return{lat:p[0],lng:p[1]};});
+  if(startMkr&&mapC)mapC.removeLayer(startMkr);
+  if(mapC)startMkr=L.circleMarker([circAtivo.startPt.lat,circAtivo.startPt.lng],{radius:9,color:'#3DBA6F',fillColor:'#3DBA6F',fillOpacity:1,weight:2}).addTo(mapC).bindPopup('INICIO');
+  setCircuitoMode('manual');
+  setCMode('add');
+  renderWaypoints();
+  cSt(o.label+' aplicado — '+(pts.length-1)+' pontos · revise e toque GERAR','g');
+}
+function setCircuitoMode(m){
+  circuitoModoAuto=(m==='auto');
+  var mw=document.querySelector('#p-circ .map-wrap'), bib=document.getElementById('circ-biblioteca-wrap'), auto=document.getElementById('circ-auto-wrap');
+  var btnM=document.getElementById('cModeManual'), btnA=document.getElementById('cModeAuto');
+  if(mw)mw.style.display=circuitoModoAuto?'none':'';
+  if(bib)bib.style.display=circuitoModoAuto?'none':'';
+  if(auto)auto.style.display=circuitoModoAuto?'flex':'none';
+  if(btnM)btnM.className='btn sm'+(circuitoModoAuto?'':' on');
+  if(btnA)btnA.className='btn sm'+(circuitoModoAuto?' on':'');
+  if(circuitoModoAuto){
+    if(!ruasAgregadas.length&&!streetsLayer)loadStreets();
+    renderRuasRanking();
+  }
 }
 function setCMode(m){
   cMode=m;
@@ -1513,6 +1664,8 @@ function resetTotal(){
     wpMarkers.forEach(function(m){mapC.removeLayer(m);});wpMarkers=[];
     if(streetsLayer){mapC.removeLayer(streetsLayer);streetsLayer=null;}
   }
+  ruasAgregadas=[];ruasSelNomes={};circOpcoesInicio=[];
+  setCircuitoMode('manual');
   // Clear localStorage
   localStorage.removeItem(LS_KEY);
   // Re-render
@@ -1568,6 +1721,8 @@ function novoProj(){
   bairrosList=[];circuitosBib=[];criativosBib=[];veiculacoes=[];extras=[];
   bairroAtual={pts:[],name:''};
   if(mapB){if(bPolyL){mapB.removeLayer(bPolyL);bPolyL=null;}bVtxMarkers.forEach(function(m){mapB.removeLayer(m);});bVtxMarkers=[];}
+  if(mapC&&streetsLayer){mapC.removeLayer(streetsLayer);streetsLayer=null;}
+  ruasAgregadas=[];ruasSelNomes={};circOpcoesInicio=[];
   renderBairrosLista();renderCircBiblioteca();renderExtras();renderCriativosBib();
   calcTotals();renderCal();
 }
